@@ -82,8 +82,8 @@ docker compose version
 ### Clonar el repositorio
 
 ```bash
-git clone <REPOSITORY_URL>
-cd <PROJECT_DIRECTORY>
+git clone https://github.com/nicolasfenoglio/bbdd-tp-integrador
+cd bbdd-tp-integrador
 ```
 
 ### Instalar dependencias
@@ -359,7 +359,7 @@ Se recomienda mantener los commits pequeños y enfocados en una única modificac
 | Recurso                                           | Descripción                                          |
 | ------------------------------------------------- | ---------------------------------------------------- |
 | [Especificación de requisitos (SRS)](docs/SRS.md) | Requisitos funcionales y no funcionales del sistema. |
-| [Repositorio](REPOSITORY_URL)                     | Código fuente y seguimiento del desarrollo.          |
+| [Repositorio](https://github.com/nicolasfenoglio/bbdd-tp-integrador)                     | Código fuente y seguimiento del desarrollo.          |
 
 ### Documentación de tecnologías
 
