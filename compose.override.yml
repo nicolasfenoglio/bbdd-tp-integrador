@@ -1,0 +1,13 @@
+services:
+  backend:
+    build:
+      target: development
+    command: npm run dev
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: ${DATABASE_URL}
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+    restart: unless-stopped
