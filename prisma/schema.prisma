@@ -1,0 +1,108 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Contrato {
+  id          Int       @id @default(autoincrement())
+  fechaInicio DateTime  @map("fecha_inicio") @db.Date
+  fechaFin    DateTime? @map("fecha_fin") @db.Date
+  mensualidad Decimal   @db.Decimal(12, 2)
+  deposito    Decimal   @db.Decimal(12, 2)
+  estado      String
+
+  idPropiedad Int @map("id_propiedad")
+  idInquilino Int @map("id_inquilino")
+
+  propiedad Propiedad @relation(fields: [idPropiedad], references: [id])
+  inquilino Inquilino @relation(fields: [idInquilino], references: [id])
+
+  @@map("contrato")
+}
+
+model Propietario {
+  id        Int     @id @default(autoincrement())
+  nombre    String
+  apellido  String
+  documento String  @unique
+  telefono  String?
+  email     String? @unique
+
+  propiedades Propiedad[]
+
+  @@map("propietario")
+}
+
+model Inquilino {
+  id        Int     @id @default(autoincrement())
+  nombre    String
+  apellido  String
+  documento String  @unique
+  telefono  String?
+  email     String? @unique
+
+  contratos Contrato[]
+
+  @@map("inquilino")
+}
+
+model Propiedad {
+  id             Int     @id @default(autoincrement())
+  direccion      String
+  superficie     Decimal @db.Decimal(10, 2)
+  ambientes      Int
+  precioAlquiler Decimal @map("precio_alquiler") @db.Decimal(12, 2)
+  estado         String
+
+  idPropietario Int @map("id_propietario")
+  idTipo        Int @map("id_tipo")
+  idZona        Int @map("id_zona")
+
+  propietario Propietario @relation(fields: [idPropietario], references: [id])
+  tipo        Tipo        @relation(fields: [idTipo], references: [id])
+  zona        Zona        @relation(fields: [idZona], references: [id])
+
+  contratos Contrato[]
+
+  @@map("propiedad")
+}
+
+model Tipo {
+  id          Int    @id @default(autoincrement())
+  descripcion String
+
+  propiedades Propiedad[]
+
+  @@map("tipo")
+}
+
+model Zona {
+  id          Int    @id @default(autoincrement())
+  nombre      String
+  idLocalidad Int    @map("id_localidad")
+  descripcion String
+
+  localidad Localidad @relation(fields: [idLocalidad], references: [id])
+
+  propiedades Propiedad[]
+
+  @@map("zona")
+}
+
+model Localidad {
+  id          Int    @id @default(autoincrement())
+  descripcion String
+
+  zonas Zona[]
+
+  @@map("localidad")
+}
