@@ -149,6 +149,25 @@ El backend se ejecuta utilizando el servidor de desarrollo de Next.js, que propo
 
 PostgreSQL utiliza un volumen persistente para conservar los datos entre reinicios y recreaciones de los contenedores.
 
+### Preparar la base de datos
+
+Con PostgreSQL en ejecución, generar el cliente de Prisma, aplicar las migraciones y cargar los datos de ejemplo:
+
+```bash
+pnpm db:generate   # genera el cliente en app/generated/prisma
+pnpm db:migrate    # crea las tablas (prisma/migrations)
+pnpm db:seed       # borra y carga datos de ejemplo (prisma/seed.sql)
+```
+
+### Funcionalidades
+
+- **Propiedades, Propietarios, Inquilinos y Contratos:** alta, baja y listado de cada entidad. Al crear un contrato la propiedad pasa a `Alquilada`; al finalizarlo o rescindirlo vuelve a `Disponible` (ambas operaciones en una transacción).
+- **Consultas** (`/consultas`, cada una muestra su SQL equivalente):
+  1. Propiedades disponibles por zona.
+  2. Contratos vigentes que vencen en los próximos N días.
+  3. Resumen de propiedades por zona (total, disponibles, alquiladas, alquiler promedio).
+  4. Ingreso mensual por propietario según contratos vigentes.
+
 ### Acceder a la aplicación
 
 Una vez iniciados los servicios, la aplicación estará disponible en:
