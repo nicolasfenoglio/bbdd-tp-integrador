@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { connection } from "next/server";
 import type { ReactNode } from "react";
 import { Cargando, Campo, SinDatos, Titulo } from "@/app/components/ui";
 import { diasHasta, formatFecha, formatMoneda, hoyUTC } from "@/lib/format";
@@ -83,6 +84,7 @@ type IngresoPropietario = {
 };
 
 async function Contenido({ searchParams }: PageProps<"/consultas">) {
+  await connection();
   const params = await searchParams;
   const zona = typeof params.zona === "string" && params.zona ? Number(params.zona) : undefined;
   const dias = PLAZOS.includes(Number(params.dias)) ? Number(params.dias) : 60;
