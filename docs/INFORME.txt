@@ -191,10 +191,11 @@ propias de la base de datos:
 
 6.1. Página de inicio
 
-Es una portada de presentación que no consulta la base de datos. Identifica
-el trabajo práctico, describe brevemente cada sección y resume el modelo de
-datos. Para ver y administrar la información hay que elegir una sección en el
-menú superior.
+Es una portada de presentación que no consulta la base de datos. Explica en
+cuatro pasos cómo se organiza el sistema (catálogos, propietarios y
+propiedades, inquilinos y contratos, seguimiento de vencimientos) y describe
+qué significa cada estado de una propiedad y de un contrato. Para ver y
+administrar la información hay que elegir una sección en el menú.
 
 6.2. Propiedades
 
@@ -374,16 +375,17 @@ operación para evitar envíos duplicados.
 10. INTERFAZ Y DISEÑO RESPONSIVE
 -------------------------------------------------------------------------------
 
-La interfaz es sobria y de estilo administrativo: un encabezado oscuro con el
-menú de secciones, fondo gris claro, tarjetas blancas y el índigo como color
-de acción. Los estados se distinguen con etiquetas de color: verde para
+La interfaz es sobria y de estilo administrativo, con colores lisos (sin
+degradados): un encabezado oscuro con el menú de secciones, fondo gris claro,
+tarjetas blancas y el índigo como color de acción. Los estados se distinguen con etiquetas de color: verde para
 disponible o vigente, índigo para alquilada, ámbar para no disponible o
 próximo a vencer y rojo para rescindido o vencido.
 
 El diseño se adapta al ancho de la pantalla:
 
-  - En pantallas chicas la barra de navegación se reemplaza por un menú
-    desplegable.
+  - En pantallas chicas la barra de navegación se reemplaza por un panel
+    lateral que ocupa todo el alto de la pantalla y entra desde la derecha;
+    se cierra con el botón, tocando afuera o con la tecla Escape.
   - Las tablas se transforman en tarjetas apiladas: cada fila muestra sus
     datos uno debajo del otro, con el nombre de la columna como etiqueta.
   - Los formularios y filtros pasan de varias columnas a una sola.

@@ -137,7 +137,7 @@ export default function ConsultasPage(props: PageProps<"/consultas">) {
     <>
       <Titulo
         titulo="Consultas"
-        subtitulo="Consultas a la base de datos. Cada una muestra su SQL equivalente."
+        subtitulo="Reportes sobre propiedades y contratos. Cada uno muestra la consulta SQL que lo genera."
       />
       <nav className="mb-6 flex flex-wrap gap-2">
         {CONSULTAS.map((c, i) => (

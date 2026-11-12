@@ -1,116 +1,132 @@
+import type { ReactNode } from "react";
+import { Estado } from "@/app/components/ui";
+
 // Portada: no consulta la base. Los datos se ven entrando a cada sección desde el menú.
 
-const SECCIONES = [
+function Icono({ d }: { d: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className="size-5"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.8}
+      aria-hidden
+    >
+      <path d={d} strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+const PASOS: { titulo: string; texto: string; seccion: string; icono: string }[] = [
   {
-    nombre: "Propiedades",
-    descripcion:
-      "Alta, modificación y baja de inmuebles. Filtros por zona, tipo, estado y propietario.",
+    titulo: "Definí los catálogos",
+    texto: "Cargá las localidades, sus zonas y los tipos de propiedad que vas a usar.",
+    seccion: "Catálogos",
+    icono: "M4 6h16M4 12h16M4 18h10",
   },
   {
-    nombre: "Contratos",
-    descripcion: "Registro de alquileres: renovación, finalización y rescisión de contratos.",
+    titulo: "Registrá propietarios y propiedades",
+    texto: "Cada propiedad pertenece a un propietario y se ubica en una zona.",
+    seccion: "Propietarios · Propiedades",
+    icono: "M3 11.5 12 4l9 7.5M5.5 10v9.5h13V10",
   },
   {
-    nombre: "Propietarios",
-    descripcion: "Dueños de los inmuebles y cantidad de propiedades a su nombre.",
+    titulo: "Cargá inquilinos y contratos",
+    texto: "Al firmar un contrato la propiedad pasa a Alquilada automáticamente.",
+    seccion: "Inquilinos · Contratos",
+    icono: "M8 4h8l3 3v13H5V4h3m0 8h8m-8 4h5",
   },
   {
-    nombre: "Inquilinos",
-    descripcion: "Personas que alquilan, con su situación actual e historial de contratos.",
-  },
-  {
-    nombre: "Catálogos",
-    descripcion: "Tablas de referencia: zonas, localidades y tipos de propiedad.",
-  },
-  {
-    nombre: "Consultas",
-    descripcion: "Las consultas del trabajo práctico, cada una con su sentencia SQL.",
+    titulo: "Seguí los vencimientos",
+    texto: "Revisá qué contratos vencen pronto y qué propiedades quedan libres.",
+    seccion: "Consultas",
+    icono: "M12 7v5l3 2m6-2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z",
   },
 ];
 
-const TABLAS = [
-  { nombre: "propiedad", detalle: "→ propietario, tipo, zona" },
-  { nombre: "contrato", detalle: "→ propiedad, inquilino" },
-  { nombre: "propietario", detalle: "documento y email únicos" },
-  { nombre: "inquilino", detalle: "documento y email únicos" },
-  { nombre: "zona", detalle: "→ localidad" },
-  { nombre: "localidad", detalle: "catálogo" },
-  { nombre: "tipo", detalle: "catálogo" },
-];
+function Leyenda({ titulo, children }: { titulo: string; children: ReactNode }) {
+  return (
+    <section className="card">
+      <h2 className="font-semibold text-slate-900">{titulo}</h2>
+      <dl className="mt-4 space-y-3">{children}</dl>
+    </section>
+  );
+}
+
+function ItemLeyenda({ estado, children }: { estado: string; children: ReactNode }) {
+  return (
+    <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:gap-4">
+      <dt className="sm:w-32 sm:shrink-0">
+        <Estado valor={estado} />
+      </dt>
+      <dd className="text-sm text-slate-600">{children}</dd>
+    </div>
+  );
+}
 
 export default function Home() {
   return (
-    <div className="space-y-6">
-      <section className="relative overflow-hidden rounded-2xl bg-slate-900 px-6 py-10 text-white sm:px-10 sm:py-14">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -top-24 -right-24 size-72 rounded-full bg-indigo-500/30 blur-3xl"
-        />
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -bottom-32 left-1/3 size-72 rounded-full bg-sky-500/10 blur-3xl"
-        />
-        <div className="relative max-w-2xl">
-          <p className="text-xs font-semibold tracking-widest text-indigo-300 uppercase">
-            Trabajo Práctico Integrador · Bases de Datos 2026
-          </p>
-          <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
-            Sistema de Gestión Inmobiliaria
-          </h1>
-          <p className="mt-4 text-sm leading-relaxed text-slate-300 sm:text-base">
-            Aplicación que se conecta a una base de datos PostgreSQL para administrar propiedades,
-            propietarios, inquilinos y contratos de alquiler, e incluye consultas sobre propiedades
-            disponibles por zona y contratos por vencer.
-          </p>
-          <p className="mt-6 inline-flex items-center gap-2 rounded-lg bg-white/10 px-3 py-2 text-sm text-slate-200 ring-1 ring-white/10">
-            <svg
-              viewBox="0 0 24 24"
-              className="size-4 shrink-0 text-indigo-300"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={2}
-            >
-              <path d="M12 19V5M5 12l7-7 7 7" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-            Elegí una sección en el menú superior para ver y administrar los datos.
-          </p>
-        </div>
+    <div className="space-y-8">
+      <section className="rounded-2xl bg-indigo-600 px-6 py-10 text-white sm:px-10 sm:py-12">
+        <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">Gestión Inmobiliaria</h1>
+        <p className="mt-3 max-w-2xl text-base text-indigo-100 sm:text-lg">
+          Administración de propiedades, propietarios, inquilinos y contratos de alquiler.
+        </p>
+        <p className="mt-6 inline-flex items-center gap-2 rounded-lg bg-indigo-700 px-3 py-2 text-sm text-white">
+          <span className="hidden lg:inline">↑</span>
+          <span className="lg:hidden">☰</span>
+          <span>
+            Elegí una sección en el <span className="hidden lg:inline">menú superior</span>
+            <span className="lg:hidden">menú</span> para empezar.
+          </span>
+        </p>
       </section>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <section className="card lg:col-span-2">
-          <h2 className="font-semibold text-slate-900">Secciones</h2>
-          <p className="mt-0.5 text-xs text-slate-500">Disponibles en el menú superior.</p>
-          <dl className="mt-5 grid gap-x-6 gap-y-5 sm:grid-cols-2">
-            {SECCIONES.map((s, i) => (
-              <div key={s.nombre} className="flex gap-3">
-                <span className="grid size-7 shrink-0 place-items-center rounded-lg bg-indigo-50 text-xs font-semibold text-indigo-700 ring-1 ring-indigo-600/10">
-                  {i + 1}
+      <section>
+        <h2 className="mb-4 text-lg font-semibold text-slate-900">Cómo se organiza</h2>
+        <ol className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {PASOS.map((p, i) => (
+            <li key={p.titulo} className="card flex flex-col">
+              <div className="flex items-center justify-between">
+                <span className="grid size-10 place-items-center rounded-xl bg-indigo-50 text-indigo-600">
+                  <Icono d={p.icono} />
                 </span>
-                <div>
-                  <dt className="text-sm font-medium text-slate-900">{s.nombre}</dt>
-                  <dd className="mt-0.5 text-sm text-slate-500">{s.descripcion}</dd>
-                </div>
+                <span className="text-sm font-semibold text-slate-300">0{i + 1}</span>
               </div>
-            ))}
-          </dl>
-        </section>
+              <h3 className="mt-4 font-semibold text-slate-900">{p.titulo}</h3>
+              <p className="mt-1 flex-1 text-sm text-slate-600">{p.texto}</p>
+              <p className="mt-4 border-t border-slate-100 pt-3 text-xs font-medium text-indigo-700">
+                {p.seccion}
+              </p>
+            </li>
+          ))}
+        </ol>
+      </section>
 
-        <section className="card">
-          <h2 className="font-semibold text-slate-900">Modelo de datos</h2>
-          <p className="mt-0.5 text-xs text-slate-500">7 tablas relacionadas en PostgreSQL.</p>
-          <ul className="mt-5 divide-y divide-slate-100">
-            {TABLAS.map((t) => (
-              <li key={t.nombre} className="flex items-baseline justify-between gap-3 py-2">
-                <code className="font-mono text-sm font-medium text-slate-800">{t.nombre}</code>
-                <span className="text-right text-xs text-slate-500">{t.detalle}</span>
-              </li>
-            ))}
-          </ul>
-          <p className="mt-4 border-t border-slate-100 pt-4 text-xs text-slate-500">
-            Next.js · Prisma ORM · PostgreSQL · Docker
-          </p>
-        </section>
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Leyenda titulo="Estados de una propiedad">
+          <ItemLeyenda estado="Disponible">
+            Lista para alquilar. Se puede crear un contrato.
+          </ItemLeyenda>
+          <ItemLeyenda estado="Alquilada">
+            Tiene un contrato vigente. Lo asigna el sistema, no se cambia a mano.
+          </ItemLeyenda>
+          <ItemLeyenda estado="No disponible">
+            Fuera de oferta por un tiempo, por ejemplo durante una refacción.
+          </ItemLeyenda>
+        </Leyenda>
+        <Leyenda titulo="Estados de un contrato">
+          <ItemLeyenda estado="Vigente">
+            En curso. Se puede renovar, finalizar o rescindir.
+          </ItemLeyenda>
+          <ItemLeyenda estado="Finalizado">
+            Terminó en la fecha pactada. La propiedad vuelve a quedar disponible.
+          </ItemLeyenda>
+          <ItemLeyenda estado="Rescindido">
+            Se cortó antes de tiempo. La fecha de fin pasa a ser el día de la rescisión.
+          </ItemLeyenda>
+        </Leyenda>
       </div>
     </div>
   );
