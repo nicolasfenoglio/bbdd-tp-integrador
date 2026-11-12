@@ -1,94 +1,93 @@
-import { Suspense } from "react";
+import type { Metadata } from "next";
 import Link from "next/link";
-import { cambiarEstadoPropiedad, crearPropiedad, eliminarPropiedad } from "@/app/actions";
-import { Cargando, Campo, Estado, MensajeError, SinDatos, Titulo } from "@/app/components/ui";
-import { ESTADOS_PROPIEDAD, formatMoneda } from "@/lib/format";
+import { connection } from "next/server";
+import { Suspense } from "react";
+import { Avisos, Campo, Cargando, Estado, Titulo } from "@/app/components/ui";
+import {
+  ESTADOS_PROPIEDAD,
+  formatMoneda,
+  formatNumero,
+  nombreCompleto,
+  param,
+  paramId,
+} from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 
-async function Contenido({ searchParams }: PageProps<"/propiedades">) {
-  const params = await searchParams;
-  const error = typeof params.error === "string" ? params.error : undefined;
-  const zona = typeof params.zona === "string" && params.zona ? Number(params.zona) : undefined;
-  const estado = typeof params.estado === "string" && params.estado ? params.estado : undefined;
+export const metadata: Metadata = { title: "Propiedades" };
 
-  const [propiedades, propietarios, tipos, zonas] = await Promise.all([
+export default function PropiedadesPage(props: PageProps<"/propiedades">) {
+  return (
+    <>
+      <Titulo
+        titulo="Propiedades"
+        subtitulo="Inmuebles administrados por la inmobiliaria."
+        acciones={
+          <Link href="/propiedades/nueva" className="btn">
+            + Nueva propiedad
+          </Link>
+        }
+      />
+      <Suspense fallback={<Cargando />}>
+        <Contenido {...props} />
+      </Suspense>
+    </>
+  );
+}
+
+async function Contenido({ searchParams }: PageProps<"/propiedades">) {
+  await connection();
+  const sp = await searchParams;
+  const q = param(sp, "q");
+  const zona = paramId(sp, "zona");
+  const tipo = paramId(sp, "tipo");
+  const propietario = paramId(sp, "propietario");
+  const estado = param(sp, "estado");
+  const hayFiltros = Boolean(q || zona || tipo || propietario || estado);
+
+  const [propiedades, zonas, tipos, propietarios] = await Promise.all([
     prisma.propiedad.findMany({
-      where: { idZona: zona, estado },
+      where: {
+        direccion: q ? { contains: q, mode: "insensitive" } : undefined,
+        idZona: zona,
+        idTipo: tipo,
+        idPropietario: propietario,
+        estado,
+      },
       include: { propietario: true, tipo: true, zona: { include: { localidad: true } } },
-      orderBy: { id: "asc" },
+      orderBy: [{ estado: "asc" }, { direccion: "asc" }],
     }),
-    prisma.propietario.findMany({ orderBy: { apellido: "asc" } }),
+    prisma.zona.findMany({
+      include: { localidad: true },
+      orderBy: [{ localidad: { descripcion: "asc" } }, { nombre: "asc" }],
+    }),
     prisma.tipo.findMany({ orderBy: { descripcion: "asc" } }),
-    prisma.zona.findMany({ include: { localidad: true }, orderBy: { nombre: "asc" } }),
+    prisma.propietario.findMany({ orderBy: [{ apellido: "asc" }, { nombre: "asc" }] }),
   ]);
 
   return (
     <>
-      <Titulo subtitulo="Inmuebles administrados por la inmobiliaria.">Propiedades</Titulo>
-      <MensajeError error={error} />
+      <Avisos ok={param(sp, "ok")} error={param(sp, "error")} />
 
-      <details className="card mb-6">
-        <summary className="cursor-pointer text-sm font-medium">Nueva propiedad</summary>
-        <form action={crearPropiedad} className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <Campo label="Dirección">
-            <input name="direccion" required className="input" />
-          </Campo>
-          <Campo label="Superficie (m²)">
-            <input name="superficie" type="number" step="0.01" min="0" required className="input" />
-          </Campo>
-          <Campo label="Ambientes">
-            <input name="ambientes" type="number" min="1" required className="input" />
-          </Campo>
-          <Campo label="Precio de alquiler">
-            <input
-              name="precioAlquiler"
-              type="number"
-              step="0.01"
-              min="0"
-              required
-              className="input"
-            />
-          </Campo>
-          <Campo label="Propietario">
-            <select name="idPropietario" required className="input">
-              {propietarios.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.apellido}, {p.nombre}
-                </option>
-              ))}
-            </select>
-          </Campo>
-          <Campo label="Tipo">
-            <select name="idTipo" required className="input">
-              {tipos.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.descripcion}
-                </option>
-              ))}
-            </select>
-          </Campo>
-          <Campo label="Zona">
-            <select name="idZona" required className="input">
-              {zonas.map((z) => (
-                <option key={z.id} value={z.id}>
-                  {z.nombre} ({z.localidad.descripcion})
-                </option>
-              ))}
-            </select>
-          </Campo>
-          <div className="flex items-end">
-            <button className="btn w-full">Guardar</button>
-          </div>
-        </form>
-      </details>
-
-      <form className="mb-4 flex flex-wrap items-end gap-3">
+      <form className="card mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-6 lg:items-end">
+        <Campo label="Dirección" className="sm:col-span-2 lg:col-span-1">
+          <input name="q" type="search" defaultValue={q} placeholder="Buscar…" className="input" />
+        </Campo>
         <Campo label="Zona">
           <select name="zona" defaultValue={zona ?? ""} className="input">
             <option value="">Todas</option>
             {zonas.map((z) => (
               <option key={z.id} value={z.id}>
                 {z.nombre} ({z.localidad.descripcion})
+              </option>
+            ))}
+          </select>
+        </Campo>
+        <Campo label="Tipo">
+          <select name="tipo" defaultValue={tipo ?? ""} className="input">
+            <option value="">Todos</option>
+            {tipos.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.descripcion}
               </option>
             ))}
           </select>
@@ -101,85 +100,72 @@ async function Contenido({ searchParams }: PageProps<"/propiedades">) {
             ))}
           </select>
         </Campo>
-        <button className="btn">Filtrar</button>
-        <Link href="/propiedades" className="btn-secondary py-1.5">
-          Limpiar
-        </Link>
+        <Campo label="Propietario">
+          <select name="propietario" defaultValue={propietario ?? ""} className="input">
+            <option value="">Todos</option>
+            {propietarios.map((p) => (
+              <option key={p.id} value={p.id}>
+                {nombreCompleto(p)}
+              </option>
+            ))}
+          </select>
+        </Campo>
+        <div className="flex gap-2">
+          <button className="btn flex-1">Filtrar</button>
+          {hayFiltros && (
+            <Link href="/propiedades" className="btn-secondary">
+              Limpiar
+            </Link>
+          )}
+        </div>
       </form>
 
-      <div className="card overflow-x-auto p-0">
-        <table className="tabla">
-          <thead>
-            <tr>
-              <th>Dirección</th>
-              <th>Tipo</th>
-              <th>Zona</th>
-              <th>Amb.</th>
-              <th>m²</th>
-              <th>Alquiler</th>
-              <th>Propietario</th>
-              <th>Estado</th>
-              <th />
-            </tr>
-          </thead>
-          <tbody>
-            {propiedades.length === 0 && <SinDatos columnas={9} />}
-            {propiedades.map((p) => (
-              <tr key={p.id}>
-                <td>{p.direccion}</td>
-                <td>{p.tipo.descripcion}</td>
-                <td>
-                  {p.zona.nombre}
-                  <span className="block text-xs text-zinc-400">
-                    {p.zona.localidad.descripcion}
-                  </span>
-                </td>
-                <td>{p.ambientes}</td>
-                <td>{Number(p.superficie)}</td>
-                <td>{formatMoneda(p.precioAlquiler)}</td>
-                <td>
-                  {p.propietario.apellido}, {p.propietario.nombre}
-                </td>
-                <td>
-                  <form action={cambiarEstadoPropiedad} className="flex items-center gap-1">
-                    <input type="hidden" name="id" value={p.id} />
-                    {p.estado === "Alquilada" ? (
-                      <Estado valor={p.estado} />
-                    ) : (
-                      <>
-                        <select
-                          name="estado"
-                          defaultValue={p.estado}
-                          className="input py-0.5 text-xs"
-                        >
-                          {ESTADOS_PROPIEDAD.filter((e) => e !== "Alquilada").map((e) => (
-                            <option key={e}>{e}</option>
-                          ))}
-                        </select>
-                        <button className="btn-secondary">OK</button>
-                      </>
-                    )}
-                  </form>
-                </td>
-                <td className="text-right">
-                  <form action={eliminarPropiedad}>
-                    <input type="hidden" name="id" value={p.id} />
-                    <button className="btn-danger">Eliminar</button>
-                  </form>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </>
-  );
-}
+      <p className="mb-3 text-sm text-zinc-500">
+        {propiedades.length} {propiedades.length === 1 ? "propiedad" : "propiedades"}
+        {hayFiltros && " con los filtros aplicados"}
+      </p>
 
-export default function PropiedadesPage(props: PageProps<"/propiedades">) {
-  return (
-    <Suspense fallback={<Cargando />}>
-      <Contenido {...props} />
-    </Suspense>
+      {propiedades.length === 0 ? (
+        <div className="card py-12 text-center text-sm text-zinc-500">
+          No hay propiedades para mostrar.
+        </div>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {propiedades.map((p) => (
+            <Link
+              key={p.id}
+              href={`/propiedades/${p.id}`}
+              className="card group flex flex-col gap-3 transition hover:border-blue-300 hover:shadow-md"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <span className="text-xs font-medium tracking-wide text-zinc-500 uppercase">
+                  {p.tipo.descripcion}
+                </span>
+                <Estado valor={p.estado} />
+              </div>
+              <div>
+                <h3 className="font-semibold group-hover:text-blue-700">{p.direccion}</h3>
+                <p className="text-sm text-zinc-500">
+                  {p.zona.nombre} · {p.zona.localidad.descripcion}
+                </p>
+              </div>
+              <div className="flex gap-4 text-sm text-zinc-600">
+                <span>{p.ambientes} amb.</span>
+                <span>{formatNumero(p.superficie)} m²</span>
+              </div>
+              <div className="mt-auto flex items-end justify-between gap-2 border-t border-zinc-100 pt-3">
+                <span className="truncate text-xs text-zinc-500">
+                  {nombreCompleto(p.propietario)}
+                </span>
+                <span className="font-semibold whitespace-nowrap">
+                  {formatMoneda(p.precioAlquiler)}
+                  <span className="text-xs font-normal text-zinc-500">/mes</span>
+                </span>
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
+    </>
   );
 }

@@ -8,7 +8,8 @@ services:
       - "3000:3000"
     environment:
       NODE_ENV: production
-      DATABASE_URL: ${DATABASE_URL}
+      # Dentro de la red de Docker la base se llama "postgres" (no localhost)
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:
