@@ -54,7 +54,7 @@ export function FormPropiedad({
 
   if (faltan.length > 0)
     return (
-      <p className="text-sm text-zinc-600">
+      <p className="text-sm text-slate-600">
         Para cargar propiedades primero necesitás{" "}
         {faltan.map((f, i) => (
           <span key={f.href}>

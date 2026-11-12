@@ -58,7 +58,7 @@ async function Contenido({ searchParams }: PageProps<"/catalogos/localidades">) 
             <tbody>
               {localidades.length === 0 && <FilaVacia columnas={4} />}
               {localidades.map((l) => (
-                <tr key={l.id} className={l.id === editarId ? "bg-blue-50/60" : ""}>
+                <tr key={l.id} className={l.id === editarId ? "bg-indigo-50/60" : ""}>
                   <Td l="Localidad" className="font-medium">
                     {l.descripcion}
                   </Td>

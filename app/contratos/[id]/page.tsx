@@ -142,7 +142,7 @@ async function Contenido({ params, searchParams }: PageProps<"/contratos/[id]">)
                 <Dato etiqueta="Contacto">
                   {c.inquilino.telefono ?? "-"}
                   {c.inquilino.email && (
-                    <span className="block text-xs text-zinc-500">{c.inquilino.email}</span>
+                    <span className="block text-xs text-slate-500">{c.inquilino.email}</span>
                   )}
                 </Dato>
               </dl>
@@ -247,7 +247,7 @@ async function Contenido({ params, searchParams }: PageProps<"/contratos/[id]">)
             </>
           ) : (
             <Tarjeta titulo="Contrato cerrado">
-              <p className="text-sm text-zinc-600">
+              <p className="text-sm text-slate-600">
                 Este contrato está <strong>{c.estado.toLowerCase()}</strong>. Para volver a alquilar
                 la propiedad creá un contrato nuevo.
               </p>

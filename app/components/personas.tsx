@@ -94,7 +94,7 @@ export function Contacto({ persona }: { persona: Persona }) {
   return (
     <div className="text-right md:text-left">
       <div>{persona.telefono ?? "-"}</div>
-      {persona.email && <div className="text-xs text-zinc-500">{persona.email}</div>}
+      {persona.email && <div className="text-xs text-slate-500">{persona.email}</div>}
     </div>
   );
 }

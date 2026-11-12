@@ -91,7 +91,7 @@ async function Contenido({ params, searchParams }: PageProps<"/propiedades/[id]"
               <Dato etiqueta="Zona">
                 {p.zona.nombre}
                 {p.zona.descripcion && (
-                  <span className="block text-xs text-zinc-500">{p.zona.descripcion}</span>
+                  <span className="block text-xs text-slate-500">{p.zona.descripcion}</span>
                 )}
               </Dato>
               <Dato etiqueta="Localidad">{p.zona.localidad.descripcion}</Dato>
@@ -103,7 +103,7 @@ async function Contenido({ params, searchParams }: PageProps<"/propiedades/[id]"
               <Dato etiqueta="Contacto del propietario">
                 {p.propietario.telefono ?? "-"}
                 {p.propietario.email && (
-                  <span className="block text-xs text-zinc-500">{p.propietario.email}</span>
+                  <span className="block text-xs text-slate-500">{p.propietario.email}</span>
                 )}
               </Dato>
             </dl>

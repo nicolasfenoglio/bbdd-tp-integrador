@@ -189,17 +189,16 @@ propias de la base de datos:
 6. FUNCIONALIDADES
 -------------------------------------------------------------------------------
 
-6.1. Panel general (página de inicio)
+6.1. Página de inicio
 
-Muestra indicadores de la cartera: cantidad de propiedades y cuántas están
-disponibles, contratos vigentes y porcentaje de ocupación, ingreso mensual
-total por contratos vigentes, cantidad de propietarios e inquilinos, y
-contratos que vencen en los próximos 90 días. Incluye una barra de ocupación,
-el listado de próximos vencimientos y las últimas propiedades disponibles.
+Es una portada de presentación que no consulta la base de datos. Identifica
+el trabajo práctico, describe brevemente cada sección y resume el modelo de
+datos. Para ver y administrar la información hay que elegir una sección en el
+menú superior.
 
 6.2. Propiedades
 
-El listado se presenta como tarjetas y se puede filtrar por dirección, zona,
+El listado se presenta en una tabla y se puede filtrar por dirección, zona,
 tipo, estado y propietario. Desde allí se accede al alta de una propiedad
 nueva y a la ficha de cada propiedad. La ficha muestra todos sus datos,
 calcula el precio por metro cuadrado, presenta el historial completo de
@@ -375,10 +374,11 @@ operación para evitar envíos duplicados.
 10. INTERFAZ Y DISEÑO RESPONSIVE
 -------------------------------------------------------------------------------
 
-La interfaz es sobria, con una paleta neutra y el azul como color de acción.
-Los estados se distinguen con etiquetas de color: verde para disponible o
-vigente, azul para alquilada, ámbar para no disponible o próximo a vencer y
-rojo para rescindido o vencido.
+La interfaz es sobria y de estilo administrativo: un encabezado oscuro con el
+menú de secciones, fondo gris claro, tarjetas blancas y el índigo como color
+de acción. Los estados se distinguen con etiquetas de color: verde para
+disponible o vigente, índigo para alquilada, ámbar para no disponible o
+próximo a vencer y rojo para rescindido o vencido.
 
 El diseño se adapta al ancho de la pantalla:
 

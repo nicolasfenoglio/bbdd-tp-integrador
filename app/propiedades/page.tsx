@@ -2,7 +2,16 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { connection } from "next/server";
 import { Suspense } from "react";
-import { Avisos, Campo, Cargando, Estado, Titulo } from "@/app/components/ui";
+import {
+  Avisos,
+  Campo,
+  Cargando,
+  Estado,
+  FilaVacia,
+  Tarjeta,
+  Td,
+  Titulo,
+} from "@/app/components/ui";
 import {
   ESTADOS_PROPIEDAD,
   formatMoneda,
@@ -20,7 +29,7 @@ export default function PropiedadesPage(props: PageProps<"/propiedades">) {
     <>
       <Titulo
         titulo="Propiedades"
-        subtitulo="Inmuebles administrados por la inmobiliaria."
+        subtitulo="Registros de la tabla propiedad con su tipo, zona y propietario."
         acciones={
           <Link href="/propiedades/nueva" className="btn">
             + Nueva propiedad
@@ -120,52 +129,63 @@ async function Contenido({ searchParams }: PageProps<"/propiedades">) {
         </div>
       </form>
 
-      <p className="mb-3 text-sm text-zinc-500">
-        {propiedades.length} {propiedades.length === 1 ? "propiedad" : "propiedades"}
-        {hayFiltros && " con los filtros aplicados"}
-      </p>
-
-      {propiedades.length === 0 ? (
-        <div className="card py-12 text-center text-sm text-zinc-500">
-          No hay propiedades para mostrar.
-        </div>
-      ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {propiedades.map((p) => (
-            <Link
-              key={p.id}
-              href={`/propiedades/${p.id}`}
-              className="card group flex flex-col gap-3 transition hover:border-blue-300 hover:shadow-md"
-            >
-              <div className="flex items-start justify-between gap-2">
-                <span className="text-xs font-medium tracking-wide text-zinc-500 uppercase">
-                  {p.tipo.descripcion}
-                </span>
-                <Estado valor={p.estado} />
-              </div>
-              <div>
-                <h3 className="font-semibold group-hover:text-blue-700">{p.direccion}</h3>
-                <p className="text-sm text-zinc-500">
-                  {p.zona.nombre} · {p.zona.localidad.descripcion}
-                </p>
-              </div>
-              <div className="flex gap-4 text-sm text-zinc-600">
-                <span>{p.ambientes} amb.</span>
-                <span>{formatNumero(p.superficie)} m²</span>
-              </div>
-              <div className="mt-auto flex items-end justify-between gap-2 border-t border-zinc-100 pt-3">
-                <span className="truncate text-xs text-zinc-500">
-                  {nombreCompleto(p.propietario)}
-                </span>
-                <span className="font-semibold whitespace-nowrap">
+      <Tarjeta
+        sinPadding
+        className="overflow-hidden"
+        titulo={`${propiedades.length} ${propiedades.length === 1 ? "propiedad" : "propiedades"}`}
+        descripcion={hayFiltros ? "Con los filtros aplicados." : undefined}
+      >
+        <table className="tabla">
+          <thead>
+            <tr>
+              <th>Dirección</th>
+              <th>Tipo</th>
+              <th>Zona</th>
+              <th>Amb.</th>
+              <th>m²</th>
+              <th>Alquiler</th>
+              <th>Propietario</th>
+              <th>Estado</th>
+              <th />
+            </tr>
+          </thead>
+          <tbody>
+            {propiedades.length === 0 && <FilaVacia columnas={9} />}
+            {propiedades.map((p) => (
+              <tr key={p.id}>
+                <Td l="Dirección">
+                  <Link href={`/propiedades/${p.id}`} className="link">
+                    {p.direccion}
+                  </Link>
+                </Td>
+                <Td l="Tipo">{p.tipo.descripcion}</Td>
+                <Td l="Zona">
+                  <div className="text-right md:text-left">
+                    {p.zona.nombre}
+                    <span className="block text-xs text-slate-400">
+                      {p.zona.localidad.descripcion}
+                    </span>
+                  </div>
+                </Td>
+                <Td l="Ambientes">{p.ambientes}</Td>
+                <Td l="Superficie">{formatNumero(p.superficie)}</Td>
+                <Td l="Alquiler" className="whitespace-nowrap">
                   {formatMoneda(p.precioAlquiler)}
-                  <span className="text-xs font-normal text-zinc-500">/mes</span>
-                </span>
-              </div>
-            </Link>
-          ))}
-        </div>
-      )}
+                </Td>
+                <Td l="Propietario">{nombreCompleto(p.propietario)}</Td>
+                <Td l="Estado">
+                  <Estado valor={p.estado} />
+                </Td>
+                <Td>
+                  <Link href={`/propiedades/${p.id}`} className="btn-secondary btn-sm">
+                    Ver
+                  </Link>
+                </Td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </Tarjeta>
     </>
   );
 }

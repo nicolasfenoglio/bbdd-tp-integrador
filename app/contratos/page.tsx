@@ -138,7 +138,7 @@ async function Contenido({ searchParams }: PageProps<"/contratos">) {
               const restan = c.estado === "Vigente" && c.fechaFin ? diasHasta(c.fechaFin) : null;
               return (
                 <tr key={c.id}>
-                  <Td l="Contrato" className="text-zinc-400">
+                  <Td l="Contrato" className="text-slate-400">
                     #{c.id}
                   </Td>
                   <Td l="Propiedad">
@@ -146,7 +146,9 @@ async function Contenido({ searchParams }: PageProps<"/contratos">) {
                       <Link href={`/propiedades/${c.propiedad.id}`} className="link">
                         {c.propiedad.direccion}
                       </Link>
-                      <span className="block text-xs text-zinc-500">{c.propiedad.zona.nombre}</span>
+                      <span className="block text-xs text-slate-500">
+                        {c.propiedad.zona.nombre}
+                      </span>
                     </div>
                   </Td>
                   <Td l="Inquilino">{nombreCompleto(c.inquilino)}</Td>
@@ -160,7 +162,7 @@ async function Contenido({ searchParams }: PageProps<"/contratos">) {
                               ? "font-medium text-red-600"
                               : restan <= 60
                                 ? "font-medium text-amber-600"
-                                : "text-zinc-500"
+                                : "text-slate-500"
                           }`}
                         >
                           {restan < 0 ? textoDias(restan) : `restan ${textoDias(restan)}`}

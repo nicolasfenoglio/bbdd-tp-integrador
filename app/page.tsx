@@ -1,242 +1,117 @@
-import Link from "next/link";
-import { connection } from "next/server";
-import { Suspense } from "react";
-import { Cargando, Estado, Tarjeta, Titulo } from "@/app/components/ui";
-import {
-  diasHasta,
-  formatFecha,
-  formatMoneda,
-  hoyUTC,
-  nombreCompleto,
-  sumarDias,
-  textoDias,
-} from "@/lib/format";
-import { prisma } from "@/lib/prisma";
+// Portada: no consulta la base. Los datos se ven entrando a cada sección desde el menú.
+
+const SECCIONES = [
+  {
+    nombre: "Propiedades",
+    descripcion:
+      "Alta, modificación y baja de inmuebles. Filtros por zona, tipo, estado y propietario.",
+  },
+  {
+    nombre: "Contratos",
+    descripcion: "Registro de alquileres: renovación, finalización y rescisión de contratos.",
+  },
+  {
+    nombre: "Propietarios",
+    descripcion: "Dueños de los inmuebles y cantidad de propiedades a su nombre.",
+  },
+  {
+    nombre: "Inquilinos",
+    descripcion: "Personas que alquilan, con su situación actual e historial de contratos.",
+  },
+  {
+    nombre: "Catálogos",
+    descripcion: "Tablas de referencia: zonas, localidades y tipos de propiedad.",
+  },
+  {
+    nombre: "Consultas",
+    descripcion: "Las consultas del trabajo práctico, cada una con su sentencia SQL.",
+  },
+];
+
+const TABLAS = [
+  { nombre: "propiedad", detalle: "→ propietario, tipo, zona" },
+  { nombre: "contrato", detalle: "→ propiedad, inquilino" },
+  { nombre: "propietario", detalle: "documento y email únicos" },
+  { nombre: "inquilino", detalle: "documento y email únicos" },
+  { nombre: "zona", detalle: "→ localidad" },
+  { nombre: "localidad", detalle: "catálogo" },
+  { nombre: "tipo", detalle: "catálogo" },
+];
 
 export default function Home() {
   return (
-    <>
-      <Titulo
-        titulo="Panel general"
-        subtitulo="Resumen de la actividad de la inmobiliaria."
-        acciones={
-          <>
-            <Link href="/propiedades/nueva" className="btn-secondary">
-              + Propiedad
-            </Link>
-            <Link href="/contratos/nuevo" className="btn">
-              + Contrato
-            </Link>
-          </>
-        }
-      />
-      <Suspense fallback={<Cargando />}>
-        <Contenido />
-      </Suspense>
-    </>
-  );
-}
-
-async function Contenido() {
-  await connection(); // datos siempre frescos: no prerenderizar
-  const hoy = hoyUTC();
-
-  const [
-    propiedades,
-    disponibles,
-    alquiladas,
-    propietarios,
-    inquilinos,
-    vigentes,
-    ingreso,
-    proximos,
-    vencidos,
-    ultimasDisponibles,
-  ] = await Promise.all([
-    prisma.propiedad.count(),
-    prisma.propiedad.count({ where: { estado: "Disponible" } }),
-    prisma.propiedad.count({ where: { estado: "Alquilada" } }),
-    prisma.propietario.count(),
-    prisma.inquilino.count(),
-    prisma.contrato.count({ where: { estado: "Vigente" } }),
-    prisma.contrato.aggregate({ where: { estado: "Vigente" }, _sum: { mensualidad: true } }),
-    prisma.contrato.findMany({
-      where: { estado: "Vigente", fechaFin: { gte: hoy, lte: sumarDias(hoy, 90) } },
-      include: { propiedad: true, inquilino: true },
-      orderBy: { fechaFin: "asc" },
-    }),
-    prisma.contrato.count({ where: { estado: "Vigente", fechaFin: { lt: hoy } } }),
-    prisma.propiedad.findMany({
-      where: { estado: "Disponible" },
-      include: { zona: true, tipo: true },
-      orderBy: { id: "desc" },
-      take: 6,
-    }),
-  ]);
-
-  const ocupacion = propiedades ? Math.round((alquiladas / propiedades) * 100) : 0;
-
-  const indicadores = [
-    {
-      label: "Propiedades",
-      valor: propiedades,
-      detalle: `${disponibles} disponibles`,
-      href: "/propiedades",
-    },
-    {
-      label: "Contratos vigentes",
-      valor: vigentes,
-      detalle: `${ocupacion}% de ocupación`,
-      href: "/contratos?estado=Vigente",
-    },
-    {
-      label: "Ingreso mensual",
-      valor: formatMoneda(ingreso._sum.mensualidad),
-      detalle: "por contratos vigentes",
-      href: "/consultas#c4",
-    },
-    {
-      label: "Propietarios",
-      valor: propietarios,
-      detalle: "dueños registrados",
-      href: "/propietarios",
-    },
-    {
-      label: "Inquilinos",
-      valor: inquilinos,
-      detalle: "personas registradas",
-      href: "/inquilinos",
-    },
-    {
-      label: "Vencen en 90 días",
-      valor: proximos.length,
-      detalle: vencidos ? `${vencidos} vencidos sin cerrar` : "ninguno vencido",
-      href: "/consultas?dias=90#c2",
-    },
-  ];
-
-  return (
-    <>
-      <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
-        {indicadores.map((i) => (
-          <Link
-            key={i.label}
-            href={i.href}
-            className="card min-w-0 transition hover:border-blue-300 hover:shadow-md"
-          >
-            <p className="truncate text-xs font-medium text-zinc-500 sm:text-sm">{i.label}</p>
-            <p className="mt-1 truncate text-xl font-semibold sm:text-3xl">{i.valor}</p>
-            <p className="mt-1 truncate text-xs text-zinc-400">{i.detalle}</p>
-          </Link>
-        ))}
-      </div>
-
-      <Tarjeta className="mb-6" titulo="Ocupación de la cartera">
-        <div className="flex h-3 overflow-hidden rounded-full bg-zinc-200">
-          <div className="bg-blue-600" style={{ width: `${ocupacion}%` }} />
-          <div
-            className="bg-green-500"
-            style={{ width: `${propiedades ? (disponibles / propiedades) * 100 : 0}%` }}
-          />
+    <div className="space-y-6">
+      <section className="relative overflow-hidden rounded-2xl bg-slate-900 px-6 py-10 text-white sm:px-10 sm:py-14">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -top-24 -right-24 size-72 rounded-full bg-indigo-500/30 blur-3xl"
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -bottom-32 left-1/3 size-72 rounded-full bg-sky-500/10 blur-3xl"
+        />
+        <div className="relative max-w-2xl">
+          <p className="text-xs font-semibold tracking-widest text-indigo-300 uppercase">
+            Trabajo Práctico Integrador · Bases de Datos 2026
+          </p>
+          <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
+            Sistema de Gestión Inmobiliaria
+          </h1>
+          <p className="mt-4 text-sm leading-relaxed text-slate-300 sm:text-base">
+            Aplicación que se conecta a una base de datos PostgreSQL para administrar propiedades,
+            propietarios, inquilinos y contratos de alquiler, e incluye consultas sobre propiedades
+            disponibles por zona y contratos por vencer.
+          </p>
+          <p className="mt-6 inline-flex items-center gap-2 rounded-lg bg-white/10 px-3 py-2 text-sm text-slate-200 ring-1 ring-white/10">
+            <svg
+              viewBox="0 0 24 24"
+              className="size-4 shrink-0 text-indigo-300"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path d="M12 19V5M5 12l7-7 7 7" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            Elegí una sección en el menú superior para ver y administrar los datos.
+          </p>
         </div>
-        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-zinc-600">
-          <span>
-            <span className="mr-1 inline-block size-2 rounded-full bg-blue-600" />
-            Alquiladas: {alquiladas}
-          </span>
-          <span>
-            <span className="mr-1 inline-block size-2 rounded-full bg-green-500" />
-            Disponibles: {disponibles}
-          </span>
-          <span>
-            <span className="mr-1 inline-block size-2 rounded-full bg-zinc-300" />
-            No disponibles: {propiedades - alquiladas - disponibles}
-          </span>
-        </div>
-      </Tarjeta>
+      </section>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Tarjeta
-          sinPadding
-          titulo="Próximos vencimientos"
-          descripcion="Contratos vigentes que terminan en los próximos 90 días."
-          acciones={
-            <Link href="/consultas?dias=90#c2" className="link text-sm">
-              Ver todos
-            </Link>
-          }
-        >
-          <ul className="divide-y divide-zinc-100">
-            {proximos.length === 0 && (
-              <li className="px-5 py-6 text-center text-sm text-zinc-400">Nada por vencer.</li>
-            )}
-            {proximos.slice(0, 6).map((c) => {
-              const restan = diasHasta(c.fechaFin!);
-              return (
-                <li key={c.id}>
-                  <Link
-                    href={`/contratos/${c.id}`}
-                    className="flex items-center justify-between gap-3 px-4 py-3 hover:bg-zinc-50 sm:px-5"
-                  >
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-medium">{c.propiedad.direccion}</p>
-                      <p className="truncate text-xs text-zinc-500">
-                        {nombreCompleto(c.inquilino)}
-                      </p>
-                    </div>
-                    <div className="shrink-0 text-right">
-                      <p
-                        className={`text-sm font-medium ${restan <= 30 ? "text-red-600" : "text-amber-600"}`}
-                      >
-                        {textoDias(restan)}
-                      </p>
-                      <p className="text-xs text-zinc-400">{formatFecha(c.fechaFin)}</p>
-                    </div>
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        </Tarjeta>
+      <div className="grid gap-6 lg:grid-cols-3">
+        <section className="card lg:col-span-2">
+          <h2 className="font-semibold text-slate-900">Secciones</h2>
+          <p className="mt-0.5 text-xs text-slate-500">Disponibles en el menú superior.</p>
+          <dl className="mt-5 grid gap-x-6 gap-y-5 sm:grid-cols-2">
+            {SECCIONES.map((s, i) => (
+              <div key={s.nombre} className="flex gap-3">
+                <span className="grid size-7 shrink-0 place-items-center rounded-lg bg-indigo-50 text-xs font-semibold text-indigo-700 ring-1 ring-indigo-600/10">
+                  {i + 1}
+                </span>
+                <div>
+                  <dt className="text-sm font-medium text-slate-900">{s.nombre}</dt>
+                  <dd className="mt-0.5 text-sm text-slate-500">{s.descripcion}</dd>
+                </div>
+              </div>
+            ))}
+          </dl>
+        </section>
 
-        <Tarjeta
-          sinPadding
-          titulo="Propiedades disponibles"
-          descripcion="Últimas propiedades listas para alquilar."
-          acciones={
-            <Link href="/propiedades?estado=Disponible" className="link text-sm">
-              Ver todas
-            </Link>
-          }
-        >
-          <ul className="divide-y divide-zinc-100">
-            {ultimasDisponibles.length === 0 && (
-              <li className="px-5 py-6 text-center text-sm text-zinc-400">
-                No hay propiedades disponibles.
-              </li>
-            )}
-            {ultimasDisponibles.map((p) => (
-              <li key={p.id}>
-                <Link
-                  href={`/propiedades/${p.id}`}
-                  className="flex items-center justify-between gap-3 px-4 py-3 hover:bg-zinc-50 sm:px-5"
-                >
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium">{p.direccion}</p>
-                    <p className="truncate text-xs text-zinc-500">
-                      {p.tipo.descripcion} · {p.zona.nombre}
-                    </p>
-                  </div>
-                  <div className="shrink-0 text-right">
-                    <p className="text-sm font-medium">{formatMoneda(p.precioAlquiler)}</p>
-                    <Estado valor={p.estado} />
-                  </div>
-                </Link>
+        <section className="card">
+          <h2 className="font-semibold text-slate-900">Modelo de datos</h2>
+          <p className="mt-0.5 text-xs text-slate-500">7 tablas relacionadas en PostgreSQL.</p>
+          <ul className="mt-5 divide-y divide-slate-100">
+            {TABLAS.map((t) => (
+              <li key={t.nombre} className="flex items-baseline justify-between gap-3 py-2">
+                <code className="font-mono text-sm font-medium text-slate-800">{t.nombre}</code>
+                <span className="text-right text-xs text-slate-500">{t.detalle}</span>
               </li>
             ))}
           </ul>
-        </Tarjeta>
+          <p className="mt-4 border-t border-slate-100 pt-4 text-xs text-slate-500">
+            Next.js · Prisma ORM · PostgreSQL · Docker
+          </p>
+        </section>
       </div>
-    </>
+    </div>
   );
 }

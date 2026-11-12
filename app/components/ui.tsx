@@ -14,18 +14,20 @@ export function Titulo({
   volver?: { href: string; label: string };
 }) {
   return (
-    <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+    <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
       <div className="min-w-0">
         {volver && (
           <Link
             href={volver.href}
-            className="mb-1 inline-block text-sm text-zinc-500 hover:text-zinc-800"
+            className="mb-2 inline-flex items-center gap-1 text-sm font-medium text-slate-500 transition hover:text-indigo-700"
           >
-            ← {volver.label}
+            <span aria-hidden>←</span> {volver.label}
           </Link>
         )}
-        <h1 className="text-2xl font-semibold tracking-tight break-words sm:text-3xl">{titulo}</h1>
-        {subtitulo && <p className="mt-1 text-sm text-zinc-500">{subtitulo}</p>}
+        <h1 className="text-2xl font-bold tracking-tight wrap-break-word text-slate-900 sm:text-[32px]">
+          {titulo}
+        </h1>
+        {subtitulo && <p className="mt-1.5 text-sm text-slate-500 sm:text-base">{subtitulo}</p>}
       </div>
       {acciones && <div className="flex flex-wrap gap-2">{acciones}</div>}
     </div>
@@ -38,13 +40,21 @@ export function Avisos({ ok, error }: { ok?: string; error?: string }) {
   return (
     <div
       role="status"
-      className={`mb-5 rounded-lg border px-4 py-3 text-sm ${
+      className={`mb-6 flex items-start gap-3 rounded-xl border px-4 py-3 text-sm ${
         error
           ? "border-red-200 bg-red-50 text-red-800"
-          : "border-green-200 bg-green-50 text-green-800"
+          : "border-emerald-200 bg-emerald-50 text-emerald-800"
       }`}
     >
-      {error ?? ok}
+      <span
+        aria-hidden
+        className={`mt-px grid size-5 shrink-0 place-items-center rounded-full text-xs font-bold text-white ${
+          error ? "bg-red-500" : "bg-emerald-500"
+        }`}
+      >
+        {error ? "!" : "✓"}
+      </span>
+      <span>{error ?? ok}</span>
     </div>
   );
 }
@@ -71,12 +81,12 @@ export function Tarjeta({
       {(titulo || acciones) && (
         <div
           className={`flex flex-wrap items-start justify-between gap-2 ${
-            sinPadding ? "border-b border-zinc-200 px-4 py-3 sm:px-5" : "mb-4"
+            sinPadding ? "border-b border-slate-200 px-4 py-4 sm:px-6" : "mb-5"
           }`}
         >
           <div>
-            {titulo && <h2 className="font-semibold">{titulo}</h2>}
-            {descripcion && <p className="mt-0.5 text-xs text-zinc-500">{descripcion}</p>}
+            {titulo && <h2 className="font-semibold text-slate-900">{titulo}</h2>}
+            {descripcion && <p className="mt-0.5 text-xs text-slate-500">{descripcion}</p>}
           </div>
           {acciones}
         </div>
@@ -86,23 +96,22 @@ export function Tarjeta({
   );
 }
 
-const coloresEstado: Record<string, string> = {
-  Disponible: "bg-green-100 text-green-800",
-  Vigente: "bg-green-100 text-green-800",
-  Alquilada: "bg-blue-100 text-blue-800",
-  Finalizado: "bg-zinc-100 text-zinc-700",
-  "No disponible": "bg-amber-100 text-amber-800",
-  Rescindido: "bg-red-100 text-red-700",
-  Vencido: "bg-red-100 text-red-700",
+const coloresEstado: Record<string, [string, string]> = {
+  Disponible: ["bg-emerald-50 text-emerald-700 ring-emerald-600/20", "bg-emerald-500"],
+  Vigente: ["bg-emerald-50 text-emerald-700 ring-emerald-600/20", "bg-emerald-500"],
+  Alquilada: ["bg-indigo-50 text-indigo-700 ring-indigo-600/20", "bg-indigo-500"],
+  Finalizado: ["bg-slate-100 text-slate-600 ring-slate-500/20", "bg-slate-400"],
+  "No disponible": ["bg-amber-50 text-amber-800 ring-amber-600/20", "bg-amber-500"],
+  Rescindido: ["bg-red-50 text-red-700 ring-red-600/20", "bg-red-500"],
 };
 
 export function Estado({ valor }: { valor: string }) {
+  const [clase, punto] = coloresEstado[valor] ?? coloresEstado.Finalizado;
   return (
     <span
-      className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium whitespace-nowrap ${
-        coloresEstado[valor] ?? "bg-zinc-100 text-zinc-700"
-      }`}
+      className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium whitespace-nowrap ring-1 ring-inset ${clase}`}
     >
+      <span className={`size-1.5 rounded-full ${punto}`} />
       {valor}
     </span>
   );
@@ -134,7 +143,7 @@ export function FilaVacia({
 }) {
   return (
     <tr>
-      <td colSpan={columnas} className="!justify-center py-8 text-center text-zinc-400">
+      <td colSpan={columnas} className="justify-center! py-8 text-center text-slate-400">
         {texto}
       </td>
     </tr>
@@ -156,7 +165,7 @@ export function Campo({
     <label className={`block ${className ?? ""}`}>
       <span className="label">{label}</span>
       {children}
-      {ayuda && <span className="mt-1 block text-xs text-zinc-400">{ayuda}</span>}
+      {ayuda && <span className="mt-1 block text-xs text-slate-400">{ayuda}</span>}
     </label>
   );
 }
@@ -164,7 +173,7 @@ export function Campo({
 export function Dato({ etiqueta, children }: { etiqueta: string; children: ReactNode }) {
   return (
     <div>
-      <dt className="text-xs font-medium text-zinc-500">{etiqueta}</dt>
+      <dt className="text-xs font-medium text-slate-500">{etiqueta}</dt>
       <dd className="mt-0.5 text-sm">{children}</dd>
     </div>
   );
@@ -201,8 +210,8 @@ export function FormConfirmar({
 export function Cargando() {
   return (
     <div className="animate-pulse space-y-4" aria-label="Cargando">
-      <div className="h-10 rounded-lg bg-zinc-200/70" />
-      <div className="h-64 rounded-xl bg-zinc-200/60" />
+      <div className="h-10 rounded-lg bg-slate-200/70" />
+      <div className="h-64 rounded-xl bg-slate-200/60" />
     </div>
   );
 }

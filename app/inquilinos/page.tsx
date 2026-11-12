@@ -83,7 +83,7 @@ async function Contenido({ searchParams }: PageProps<"/inquilinos">) {
                 {inquilinos.map((i) => {
                   const vigente = i.contratos.find((c) => c.estado === "Vigente");
                   return (
-                    <tr key={i.id} className={i.id === editarId ? "bg-blue-50/60" : ""}>
+                    <tr key={i.id} className={i.id === editarId ? "bg-indigo-50/60" : ""}>
                       <Td l="Inquilino" className="font-medium">
                         {nombreCompleto(i)}
                       </Td>
@@ -96,12 +96,12 @@ async function Contenido({ searchParams }: PageProps<"/inquilinos">) {
                           {vigente ? (
                             <>
                               <Estado valor="Vigente" />
-                              <div className="mt-0.5 text-xs text-zinc-500">
+                              <div className="mt-0.5 text-xs text-slate-500">
                                 {vigente.propiedad.direccion}
                               </div>
                             </>
                           ) : (
-                            <span className="text-xs text-zinc-500">Sin contrato vigente</span>
+                            <span className="text-xs text-slate-500">Sin contrato vigente</span>
                           )}
                           {i.contratos.length > 0 && (
                             <Link

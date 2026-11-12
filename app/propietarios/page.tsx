@@ -24,7 +24,7 @@ export default function PropietariosPage(props: PageProps<"/propietarios">) {
     <>
       <Titulo
         titulo="Propietarios"
-        subtitulo="Dueños de las propiedades que administra la inmobiliaria."
+        subtitulo="Personas o empresas dueñas de las propiedades registradas."
       />
       <Suspense fallback={<Cargando />}>
         <Contenido {...props} />
@@ -80,7 +80,7 @@ async function Contenido({ searchParams }: PageProps<"/propietarios">) {
                 {propietarios.map((p) => {
                   const alquiladas = p.propiedades.filter((x) => x.estado === "Alquilada").length;
                   return (
-                    <tr key={p.id} className={p.id === editarId ? "bg-blue-50/60" : ""}>
+                    <tr key={p.id} className={p.id === editarId ? "bg-indigo-50/60" : ""}>
                       <Td l="Propietario" className="font-medium">
                         {nombreCompleto(p)}
                       </Td>
@@ -93,7 +93,7 @@ async function Contenido({ searchParams }: PageProps<"/propietarios">) {
                           {p.propiedades.length}
                         </Link>
                         {p.propiedades.length > 0 && (
-                          <span className="ml-1 text-xs text-zinc-500">
+                          <span className="ml-1 text-xs text-slate-500">
                             ({alquiladas} alquiladas)
                           </span>
                         )}

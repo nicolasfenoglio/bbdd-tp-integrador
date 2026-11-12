@@ -63,12 +63,12 @@ async function Contenido({ searchParams }: PageProps<"/catalogos/zonas">) {
             <tbody>
               {zonas.length === 0 && <FilaVacia columnas={5} />}
               {zonas.map((z) => (
-                <tr key={z.id} className={z.id === editarId ? "bg-blue-50/60" : ""}>
+                <tr key={z.id} className={z.id === editarId ? "bg-indigo-50/60" : ""}>
                   <Td l="Zona" className="font-medium">
                     {z.nombre}
                   </Td>
                   <Td l="Localidad">{z.localidad.descripcion}</Td>
-                  <Td l="Descripción" className="text-zinc-500">
+                  <Td l="Descripción" className="text-slate-500">
                     {z.descripcion || "-"}
                   </Td>
                   <Td l="Propiedades">
@@ -100,7 +100,7 @@ async function Contenido({ searchParams }: PageProps<"/catalogos/zonas">) {
           className="order-first lg:sticky lg:top-20 lg:order-none"
         >
           {localidades.length === 0 ? (
-            <p className="text-sm text-zinc-500">
+            <p className="text-sm text-slate-500">
               Primero cargá una{" "}
               <Link href="/catalogos/localidades" className="link">
                 localidad

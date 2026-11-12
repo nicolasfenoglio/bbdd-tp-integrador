@@ -111,18 +111,18 @@ function Consulta(props: {
 }) {
   return (
     <section id={props.id} className="card mb-6 scroll-mt-20 overflow-hidden p-0 sm:p-0">
-      <div className="space-y-3 border-b border-zinc-200 px-4 py-4 sm:px-5">
+      <div className="space-y-3 border-b border-slate-200 px-4 py-4 sm:px-5">
         <div>
           <h2 className="text-lg font-semibold">
-            <span className="mr-2 text-zinc-400">{props.numero}.</span>
+            <span className="mr-2 text-slate-400">{props.numero}.</span>
             {props.titulo}
           </h2>
-          <p className="text-sm text-zinc-500">{props.descripcion}</p>
+          <p className="text-sm text-slate-500">{props.descripcion}</p>
         </div>
         {props.filtros}
         <details>
-          <summary className="cursor-pointer text-xs font-medium text-blue-700">Ver SQL</summary>
-          <pre className="mt-2 overflow-x-auto rounded-lg bg-zinc-900 p-3 font-mono text-xs leading-relaxed text-zinc-100">
+          <summary className="cursor-pointer text-xs font-medium text-indigo-700">Ver SQL</summary>
+          <pre className="mt-2 overflow-x-auto rounded-lg bg-slate-900 p-3 font-mono text-xs leading-relaxed text-slate-100">
             {props.sql.trim()}
           </pre>
         </details>
@@ -259,7 +259,9 @@ async function Contenido({ searchParams }: PageProps<"/consultas">) {
               <tr key={p.id}>
                 <Td l="Zona">
                   {p.zona.nombre}
-                  <span className="ml-1 text-xs text-zinc-400">{p.zona.localidad.descripcion}</span>
+                  <span className="ml-1 text-xs text-slate-400">
+                    {p.zona.localidad.descripcion}
+                  </span>
                 </Td>
                 <Td l="Dirección">
                   <Link href={`/propiedades/${p.id}`} className="link">
@@ -375,10 +377,10 @@ async function Contenido({ searchParams }: PageProps<"/consultas">) {
                   <Td l="Alquiladas">{r.alquiladas}</Td>
                   <Td l="Ocupación">
                     <div className="flex items-center gap-2">
-                      <div className="h-1.5 w-16 overflow-hidden rounded-full bg-zinc-200">
-                        <div className="h-full bg-blue-600" style={{ width: `${ocupacion}%` }} />
+                      <div className="h-1.5 w-16 overflow-hidden rounded-full bg-slate-200">
+                        <div className="h-full bg-indigo-600" style={{ width: `${ocupacion}%` }} />
                       </div>
-                      <span className="text-xs text-zinc-500">{ocupacion}%</span>
+                      <span className="text-xs text-slate-500">{ocupacion}%</span>
                     </div>
                   </Td>
                   <Td l="Alquiler promedio">{formatMoneda(r.precio_promedio)}</Td>

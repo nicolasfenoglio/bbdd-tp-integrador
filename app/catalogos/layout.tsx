@@ -15,7 +15,7 @@ export default function CatalogosLayout({ children }: LayoutProps<"/catalogos">)
         titulo="Catálogos"
         subtitulo="Datos de referencia que usan las propiedades: zonas, localidades y tipos."
       />
-      <Suspense fallback={<div className="mb-6 h-10 border-b border-zinc-200" />}>
+      <Suspense fallback={<div className="mb-6 h-10 w-80 max-w-full rounded-xl bg-slate-200/60" />}>
         <Pestanas items={PESTANAS} />
       </Suspense>
       {children}

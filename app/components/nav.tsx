@@ -16,8 +16,8 @@ export const LINKS = [
 
 export function Marca() {
   return (
-    <Link href="/" className="flex items-center gap-2 font-semibold text-zinc-900">
-      <span className="grid size-8 place-items-center rounded-lg bg-blue-600 text-white">
+    <Link href="/" className="flex items-center gap-2.5">
+      <span className="grid size-8 place-items-center rounded-lg bg-indigo-500 text-white ring-1 ring-white/20">
         <svg
           viewBox="0 0 24 24"
           className="size-4"
@@ -32,7 +32,10 @@ export function Marca() {
           />
         </svg>
       </span>
-      Inmobiliaria
+      <span className="leading-tight">
+        <span className="block text-sm font-semibold text-white">Gestión Inmobiliaria</span>
+        <span className="block text-[11px] text-slate-400">TP Integrador · Bases de Datos</span>
+      </span>
     </Link>
   );
 }
@@ -44,14 +47,12 @@ export function Nav() {
 
   const clase = (href: string) =>
     `rounded-lg px-3 py-2 text-sm font-medium transition ${
-      activo(href)
-        ? "bg-blue-50 text-blue-700"
-        : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
+      activo(href) ? "bg-white/10 text-white" : "text-slate-300 hover:bg-white/5 hover:text-white"
     }`;
 
   return (
     <>
-      <nav className="hidden items-center gap-1 lg:flex">
+      <nav className="hidden items-center gap-0.5 lg:flex">
         {LINKS.map((l) => (
           <Link key={l.href} href={l.href} className={clase(l.href)}>
             {l.label}
@@ -61,8 +62,8 @@ export function Nav() {
 
       <button
         type="button"
-        className="btn-secondary px-2.5 lg:hidden"
-        aria-label="Abrir menú"
+        className="grid size-9 place-items-center rounded-lg text-slate-200 ring-1 ring-white/15 transition hover:bg-white/10 lg:hidden"
+        aria-label={abierto ? "Cerrar menú" : "Abrir menú"}
         aria-expanded={abierto}
         onClick={() => setAbierto((v) => !v)}
       >
@@ -82,7 +83,7 @@ export function Nav() {
       </button>
 
       {abierto && (
-        <nav className="absolute inset-x-0 top-full z-20 grid gap-1 border-b border-zinc-200 bg-white px-4 py-3 shadow-sm lg:hidden">
+        <nav className="absolute inset-x-0 top-full z-20 grid gap-1 border-t border-white/10 bg-slate-900 px-4 py-3 shadow-lg lg:hidden">
           {LINKS.map((l) => (
             <Link
               key={l.href}
@@ -103,15 +104,15 @@ export function Nav() {
 export function Pestanas({ items }: { items: { href: string; label: string }[] }) {
   const pathname = usePathname();
   return (
-    <div className="mb-6 flex gap-1 overflow-x-auto border-b border-zinc-200">
+    <div className="mb-6 inline-flex max-w-full gap-1 overflow-x-auto rounded-xl bg-slate-200/60 p-1">
       {items.map((i) => (
         <Link
           key={i.href}
           href={i.href}
-          className={`-mb-px border-b-2 px-4 py-2 text-sm font-medium whitespace-nowrap transition ${
+          className={`rounded-lg px-4 py-1.5 text-sm font-medium whitespace-nowrap transition ${
             pathname.startsWith(i.href)
-              ? "border-blue-600 text-blue-700"
-              : "border-transparent text-zinc-500 hover:text-zinc-800"
+              ? "bg-white text-slate-900 shadow-sm"
+              : "text-slate-600 hover:text-slate-900"
           }`}
         >
           {i.label}

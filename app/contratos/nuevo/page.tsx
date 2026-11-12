@@ -52,7 +52,7 @@ async function Contenido({ searchParams }: PageProps<"/contratos/nuevo">) {
   if (disponibles.length === 0 || inquilinos.length === 0)
     return (
       <Tarjeta className="max-w-3xl">
-        <p className="text-sm text-zinc-600">
+        <p className="text-sm text-slate-600">
           {disponibles.length === 0 ? (
             <>
               No hay propiedades disponibles. Podés{" "}

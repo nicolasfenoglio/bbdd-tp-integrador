@@ -57,7 +57,7 @@ async function Contenido({ searchParams }: PageProps<"/catalogos/tipos">) {
             <tbody>
               {tipos.length === 0 && <FilaVacia columnas={3} />}
               {tipos.map((t) => (
-                <tr key={t.id} className={t.id === editarId ? "bg-blue-50/60" : ""}>
+                <tr key={t.id} className={t.id === editarId ? "bg-indigo-50/60" : ""}>
                   <Td l="Tipo" className="font-medium">
                     {t.descripcion}
                   </Td>

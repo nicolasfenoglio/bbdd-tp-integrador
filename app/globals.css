@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f5f6f8;
-  --foreground: #1f2328;
+  --background: #f4f6fa;
+  --foreground: #0f172a;
 }
 
 @theme inline {
@@ -18,30 +18,34 @@ body {
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
 }
 
+::selection {
+  background: #c7d2fe;
+}
+
 @layer components {
   .card {
-    @apply rounded-xl border border-zinc-200 bg-white p-4 shadow-sm sm:p-5;
+    @apply rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_4px_16px_-8px_rgba(15,23,42,0.08)] sm:p-6;
   }
   .input {
-    @apply w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm transition outline-none placeholder:text-zinc-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:bg-zinc-100 disabled:text-zinc-500;
+    @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-xs transition outline-none placeholder:text-slate-400 hover:border-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 disabled:bg-slate-100 disabled:text-slate-500;
   }
   .label {
-    @apply mb-1 block text-xs font-medium text-zinc-600;
+    @apply mb-1.5 block text-xs font-medium text-slate-600;
   }
   .btn {
-    @apply inline-flex items-center justify-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium whitespace-nowrap text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-wait disabled:opacity-60;
+    @apply inline-flex items-center justify-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium whitespace-nowrap text-white shadow-sm transition hover:bg-indigo-700 focus-visible:ring-4 focus-visible:ring-indigo-200 focus-visible:outline-none active:translate-y-px disabled:cursor-wait disabled:opacity-60;
   }
   .btn-secondary {
-    @apply inline-flex items-center justify-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm font-medium whitespace-nowrap text-zinc-700 transition hover:bg-zinc-50 disabled:cursor-wait disabled:opacity-60;
+    @apply inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium whitespace-nowrap text-slate-700 shadow-xs transition hover:border-slate-400 hover:bg-slate-50 focus-visible:ring-4 focus-visible:ring-slate-200 focus-visible:outline-none active:translate-y-px disabled:cursor-wait disabled:opacity-60;
   }
   .btn-sm {
-    @apply px-2.5 py-1 text-xs;
+    @apply rounded-md px-2.5 py-1 text-xs;
   }
   .btn-danger {
-    @apply inline-flex items-center justify-center rounded-lg px-2.5 py-1 text-xs font-medium whitespace-nowrap text-red-600 transition hover:bg-red-50 disabled:cursor-wait disabled:opacity-60;
+    @apply inline-flex items-center justify-center rounded-md px-2.5 py-1 text-xs font-medium whitespace-nowrap text-red-600 transition hover:bg-red-50 disabled:cursor-wait disabled:opacity-60;
   }
   .link {
-    @apply font-medium text-blue-700 hover:underline;
+    @apply font-medium text-indigo-700 underline-offset-2 hover:underline;
   }
 
   /* Tablas: en pantallas chicas cada fila se muestra como una tarjeta (usa data-label). */
@@ -49,16 +53,19 @@ body {
     @apply w-full text-left text-sm;
   }
   .tabla th {
-    @apply border-b border-zinc-200 bg-zinc-50 px-3 py-2.5 text-xs font-semibold tracking-wide whitespace-nowrap text-zinc-500 uppercase;
+    @apply border-b border-slate-200 bg-slate-50/80 px-4 py-3 text-[11px] font-semibold tracking-wider whitespace-nowrap text-slate-500 uppercase;
   }
   .tabla td {
-    @apply border-b border-zinc-100 px-3 py-2.5 align-middle;
+    @apply border-b border-slate-100 px-4 py-3 align-middle text-slate-700;
   }
   .tabla tbody tr:last-child td {
     @apply border-b-0;
   }
+  .tabla tbody tr {
+    @apply transition-colors;
+  }
   .tabla tbody tr:hover {
-    @apply bg-zinc-50/70;
+    @apply bg-indigo-50/40;
   }
 
   @media (max-width: 767px) {
@@ -73,7 +80,7 @@ body {
       width: 100%;
     }
     .tabla tbody tr {
-      @apply border-b border-zinc-200 px-4 py-3;
+      @apply border-b border-slate-200 px-4 py-3;
     }
     .tabla tbody tr:last-child {
       @apply border-b-0;
@@ -83,7 +90,7 @@ body {
     }
     .tabla td::before {
       content: attr(data-label);
-      @apply shrink-0 text-left text-xs font-medium text-zinc-500;
+      @apply shrink-0 text-left text-xs font-medium text-slate-500;
     }
     .tabla td:not([data-label])::before {
       content: none;
