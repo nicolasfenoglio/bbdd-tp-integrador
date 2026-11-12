@@ -1,0 +1,450 @@
+===============================================================================
+                     SISTEMA DE GESTIÓN INMOBILIARIA
+              Trabajo Práctico Integrador - Bases de Datos 2026
+       Universidad Tecnológica Nacional - Facultad Regional San Francisco
+===============================================================================
+
+Integrantes: (completar)
+Fecha: noviembre de 2026
+
+
+1. OBJETIVO
+-------------------------------------------------------------------------------
+
+El trabajo consiste en una aplicación web que se conecta a una base de datos
+relacional para administrar la operatoria de una agencia inmobiliaria dedicada
+al alquiler de inmuebles. La aplicación permite registrar propiedades, sus
+propietarios, los inquilinos y los contratos de alquiler que los vinculan, y
+ofrece consultas para apoyar la toma de decisiones, en particular la búsqueda
+de propiedades disponibles por zona y el seguimiento de contratos por vencer.
+
+La consigna pide un mínimo de tres tablas y tres consultas. La solución
+utiliza siete tablas relacionadas y cinco consultas, además de las operaciones
+de alta, baja, modificación y consulta (ABM o CRUD) sobre cada una de las
+tablas.
+
+
+2. TECNOLOGÍAS UTILIZADAS
+-------------------------------------------------------------------------------
+
+Motor de base de datos: PostgreSQL 17, ejecutado en un contenedor Docker.
+
+Acceso a datos: Prisma ORM 7 con el adaptador nativo de PostgreSQL (pg). El
+esquema se define en el archivo prisma/schema.prisma y se versiona mediante
+migraciones SQL ubicadas en prisma/migrations.
+
+Aplicación: Next.js 16 con React 19 y TypeScript. Las páginas se renderizan en
+el servidor (React Server Components) y las operaciones de escritura se
+implementan como Server Actions, es decir, funciones que se ejecutan en el
+servidor al enviar un formulario. Esto permite que la aplicación funcione aun
+sin JavaScript en el navegador para las operaciones principales.
+
+Estilos: Tailwind CSS 4.
+
+Entorno: Docker Compose levanta dos servicios, la base de datos (postgres) y la
+aplicación (backend). Se usa pnpm como gestor de paquetes, y ESLint, Prettier y
+Husky para mantener la calidad del código.
+
+
+3. ARQUITECTURA
+-------------------------------------------------------------------------------
+
+La aplicación sigue una arquitectura cliente-servidor de tres capas:
+
+  - Capa de presentación: páginas y componentes de la carpeta app/. Cada
+    página consulta los datos que necesita directamente desde el servidor y
+    devuelve HTML ya armado al navegador.
+
+  - Capa de lógica: el archivo app/actions.ts concentra todas las operaciones
+    de escritura (crear, modificar, eliminar, finalizar, rescindir y renovar).
+    Allí se validan los datos recibidos de los formularios y se aplican las
+    reglas de negocio antes de tocar la base de datos.
+
+  - Capa de datos: PostgreSQL, accedido a través del cliente de Prisma
+    definido en lib/prisma.ts. Para las consultas de agregación más complejas
+    se utiliza SQL nativo mediante prisma.$queryRaw.
+
+Cuando una operación termina, el servidor redirige al usuario a la página que
+corresponde y le muestra un mensaje de éxito o de error.
+
+
+4. MODELO DE DATOS
+-------------------------------------------------------------------------------
+
+La base de datos tiene siete tablas. Todas usan una clave primaria entera
+autoincremental llamada id (tipo SERIAL en PostgreSQL).
+
+4.1. Tabla localidad
+
+Representa una ciudad o localidad. Tiene un único atributo descriptivo,
+descripcion, que guarda el nombre de la localidad.
+
+4.2. Tabla zona
+
+Representa un barrio o sector dentro de una localidad. Sus atributos son
+nombre, descripcion e id_localidad. Este último es una clave foránea que
+referencia a localidad. Una localidad tiene muchas zonas y cada zona pertenece
+a una sola localidad (relación uno a muchos).
+
+4.3. Tabla tipo
+
+Catálogo de tipos de inmueble (departamento, casa, local comercial, oficina,
+dúplex, cochera). Tiene el atributo descripcion.
+
+4.4. Tabla propietario
+
+Persona física o jurídica dueña de uno o más inmuebles. Sus atributos son
+nombre, apellido, documento, telefono y email. El documento es obligatorio y
+único (restricción UNIQUE); el email es opcional pero, si se informa, también
+debe ser único. El teléfono es opcional.
+
+4.5. Tabla inquilino
+
+Persona que alquila o alquiló un inmueble. Tiene la misma estructura que
+propietario: nombre, apellido, documento (único), telefono y email (único y
+opcional).
+
+4.6. Tabla propiedad
+
+Es la entidad central del sistema. Sus atributos son direccion, superficie
+(DECIMAL 10,2, en metros cuadrados), ambientes (entero), precio_alquiler
+(DECIMAL 12,2) y estado. Tiene tres claves foráneas:
+
+  - id_propietario, que referencia a propietario. Un propietario puede tener
+    muchas propiedades y cada propiedad tiene un único propietario.
+  - id_tipo, que referencia a tipo.
+  - id_zona, que referencia a zona.
+
+El estado puede tomar los valores Disponible, Alquilada o No disponible.
+
+4.7. Tabla contrato
+
+Registra el alquiler de una propiedad por parte de un inquilino. Sus atributos
+son fecha_inicio (DATE, obligatoria), fecha_fin (DATE, opcional, para admitir
+contratos sin fecha de finalización), mensualidad (DECIMAL 12,2), deposito
+(DECIMAL 12,2) y estado. Tiene dos claves foráneas:
+
+  - id_propiedad, que referencia a propiedad. Una propiedad acumula a lo
+    largo del tiempo un historial de muchos contratos.
+  - id_inquilino, que referencia a inquilino. Un inquilino puede tener varios
+    contratos, por ejemplo si se mudó de un inmueble a otro.
+
+El estado del contrato puede ser Vigente, Finalizado o Rescindido.
+
+La tabla contrato resuelve, en la práctica, la relación de muchos a muchos
+entre propiedades e inquilinos, agregando los datos propios del acuerdo.
+
+4.8. Integridad referencial
+
+Todas las claves foráneas se crearon con ON DELETE RESTRICT y ON UPDATE
+CASCADE. Esto significa que la base de datos impide borrar un registro que
+está siendo referenciado. Por ejemplo, no se puede eliminar una zona que tiene
+propiedades, ni un propietario con inmuebles a su nombre, ni una propiedad con
+contratos registrados. La aplicación captura ese error (código P2003 de
+Prisma) y le explica al usuario por qué no se pudo eliminar.
+
+Los montos y medidas se guardan como DECIMAL y no como números de punto
+flotante, para evitar errores de redondeo en valores monetarios. Las fechas de
+los contratos usan el tipo DATE porque no necesitan hora.
+
+
+5. REGLAS DE NEGOCIO
+-------------------------------------------------------------------------------
+
+La aplicación garantiza las siguientes reglas, además de las restricciones
+propias de la base de datos:
+
+  - Solo se puede crear un contrato sobre una propiedad en estado
+    Disponible.
+
+  - Al crear un contrato, la propiedad pasa automáticamente a Alquilada.
+    Las dos escrituras (insertar el contrato y actualizar la propiedad) se
+    ejecutan dentro de una misma transacción: o se aplican ambas o ninguna.
+
+  - Al finalizar o rescindir un contrato vigente, la propiedad vuelve a
+    quedar Disponible, también dentro de una transacción. Si se rescinde
+    antes de tiempo, la fecha de fin del contrato pasa a ser la fecha del
+    día.
+
+  - El estado Alquilada no se puede asignar ni quitar a mano desde el
+    formulario de la propiedad: lo controlan exclusivamente los contratos.
+    El usuario solo puede alternar entre Disponible y No disponible (por
+    ejemplo, para un inmueble en refacción).
+
+  - Si se elimina un contrato que estaba vigente, la propiedad se libera.
+
+  - Un contrato vigente se puede renovar extendiendo su fecha de fin en
+    6, 12, 24 o 36 meses, opcionalmente actualizando la mensualidad.
+
+  - La fecha de fin de un contrato debe ser posterior a la de inicio.
+
+  - Si al crear un contrato no se indica mensualidad, se toma el precio de
+    alquiler de la propiedad; si no se indica depósito, se toma un mes de
+    alquiler.
+
+  - No se permiten localidades ni tipos de propiedad con nombres repetidos,
+    ni dos zonas con el mismo nombre dentro de una misma localidad.
+
+
+6. FUNCIONALIDADES
+-------------------------------------------------------------------------------
+
+6.1. Página de inicio
+
+Es una portada de presentación que no consulta la base de datos. Explica en
+cuatro pasos cómo se organiza el sistema (catálogos, propietarios y
+propiedades, inquilinos y contratos, seguimiento de vencimientos) y describe
+qué significa cada estado de una propiedad y de un contrato. Para ver y
+administrar la información hay que elegir una sección en el menú.
+
+6.2. Propiedades
+
+El listado se presenta en una tabla y se puede filtrar por dirección, zona,
+tipo, estado y propietario. Desde allí se accede al alta de una propiedad
+nueva y a la ficha de cada propiedad. La ficha muestra todos sus datos,
+calcula el precio por metro cuadrado, presenta el historial completo de
+contratos e incluye el formulario de modificación y el botón para eliminarla.
+Si la propiedad está disponible, ofrece un acceso directo para crear un
+contrato sobre ella.
+
+6.3. Contratos
+
+El listado se puede filtrar por texto (dirección o inquilino), por estado y
+por inquilino, e indica cuántos días faltan para el vencimiento. Los contratos
+próximos a vencer se marcan en color ámbar y los vencidos, en rojo. La ficha de
+cada contrato muestra el resumen económico, la duración, los datos de la
+propiedad y del inquilino, y permite editar fechas y montos, renovar,
+finalizar, rescindir o eliminar el contrato.
+
+6.4. Propietarios e inquilinos
+
+Cada sección tiene un buscador por nombre, apellido, documento o email, una
+tabla con los registros y un formulario que sirve tanto para dar de alta como
+para modificar. En propietarios se indica cuántas propiedades tiene cada uno y
+cuántas están alquiladas; en inquilinos se muestra si tiene un contrato
+vigente y en qué propiedad, con un enlace a su historial de contratos.
+
+6.5. Catálogos
+
+Agrupa en pestañas el ABM de zonas, localidades y tipos de propiedad, con la
+cantidad de propiedades asociadas a cada registro.
+
+6.6. Consultas
+
+Página dedicada a las consultas del trabajo práctico, descriptas en la
+sección siguiente.
+
+
+7. CONSULTAS
+-------------------------------------------------------------------------------
+
+Cada consulta se muestra en la aplicación junto con su sentencia SQL
+equivalente, que se puede desplegar con el enlace "Ver SQL".
+
+7.1. Propiedades disponibles por zona
+
+Lista los inmuebles en estado Disponible junto con su tipo, zona y localidad,
+ordenados por zona y por precio. Se puede filtrar por una zona en particular.
+Combina cuatro tablas mediante JOIN.
+
+    SELECT p.direccion, t.descripcion AS tipo, z.nombre AS zona,
+           l.descripcion AS localidad, p.ambientes, p.superficie,
+           p.precio_alquiler
+    FROM propiedad p
+    JOIN tipo t      ON t.id = p.id_tipo
+    JOIN zona z      ON z.id = p.id_zona
+    JOIN localidad l ON l.id = z.id_localidad
+    WHERE p.estado = 'Disponible'
+      AND p.id_zona = $1          -- solo si se elige una zona
+    ORDER BY z.nombre, p.precio_alquiler;
+
+7.2. Contratos por vencer
+
+Lista los contratos vigentes cuya fecha de fin cae dentro de un plazo
+seleccionable (30, 60, 90 o 180 días), con los datos de contacto del
+inquilino para poder avisarle.
+
+    SELECT c.id, p.direccion, i.apellido, i.nombre, i.telefono,
+           c.fecha_fin, c.mensualidad
+    FROM contrato c
+    JOIN propiedad p ON p.id = c.id_propiedad
+    JOIN inquilino i ON i.id = c.id_inquilino
+    WHERE c.estado = 'Vigente'
+      AND c.fecha_fin BETWEEN CURRENT_DATE AND CURRENT_DATE + $1
+    ORDER BY c.fecha_fin;
+
+7.3. Resumen de propiedades por zona
+
+Para cada zona calcula el total de propiedades, cuántas están disponibles y
+cuántas alquiladas, y el precio de alquiler promedio. Utiliza funciones de
+agregación con GROUP BY, la cláusula FILTER de PostgreSQL y un LEFT JOIN para
+que también aparezcan las zonas sin propiedades. La aplicación calcula además
+el porcentaje de ocupación.
+
+    SELECT z.nombre AS zona, l.descripcion AS localidad,
+           COUNT(p.id) AS total,
+           COUNT(p.id) FILTER (WHERE p.estado = 'Disponible') AS disponibles,
+           COUNT(p.id) FILTER (WHERE p.estado = 'Alquilada')  AS alquiladas,
+           AVG(p.precio_alquiler) AS precio_promedio
+    FROM zona z
+    JOIN localidad l      ON l.id = z.id_localidad
+    LEFT JOIN propiedad p ON p.id_zona = z.id
+    GROUP BY z.id, z.nombre, l.descripcion
+    ORDER BY l.descripcion, z.nombre;
+
+7.4. Ingreso mensual por propietario
+
+Suma las mensualidades de los contratos vigentes de cada propietario,
+recorriendo la cadena propietario, propiedad y contrato. La aplicación muestra
+también el total general y la participación porcentual de cada propietario.
+
+    SELECT pr.apellido, pr.nombre,
+           COUNT(c.id)        AS contratos_vigentes,
+           SUM(c.mensualidad) AS ingreso_mensual
+    FROM propietario pr
+    JOIN propiedad p ON p.id_propietario = pr.id
+    JOIN contrato c  ON c.id_propiedad = p.id
+    WHERE c.estado = 'Vigente'
+    GROUP BY pr.id, pr.apellido, pr.nombre
+    ORDER BY ingreso_mensual DESC;
+
+7.5. Contratos vencidos sin cerrar
+
+Detecta contratos que siguen figurando como vigentes aunque su fecha de fin
+ya pasó. Funciona como un control de calidad de los datos: indica qué
+contratos hay que renovar o finalizar.
+
+    SELECT c.id, p.direccion, i.apellido, i.nombre, c.fecha_fin,
+           CURRENT_DATE - c.fecha_fin AS dias_vencido
+    FROM contrato c
+    JOIN propiedad p ON p.id = c.id_propiedad
+    JOIN inquilino i ON i.id = c.id_inquilino
+    WHERE c.estado = 'Vigente'
+      AND c.fecha_fin < CURRENT_DATE
+    ORDER BY c.fecha_fin;
+
+Las consultas 1, 2 y 5 se ejecutan con la API de consultas de Prisma, que
+genera SQL equivalente al mostrado. Las consultas 3 y 4 se ejecutan con SQL
+nativo a través de prisma.$queryRaw, que usa parámetros preparados y por lo
+tanto no es vulnerable a inyección SQL.
+
+
+8. DATOS DE EJEMPLO
+-------------------------------------------------------------------------------
+
+El archivo prisma/seed.sql carga un conjunto de datos relacionados entre sí:
+4 localidades (San Francisco, Frontera, Córdoba y Rafaela), 9 zonas, 6 tipos
+de propiedad, 8 propietarios (entre ellos una sociedad anónima), 12
+inquilinos, 24 propiedades y 20 contratos.
+
+De los contratos, 12 están vigentes, 6 finalizados y 2 rescindidos. Cada
+propiedad alquilada tiene exactamente un contrato vigente, varias propiedades
+tienen contratos anteriores en su historial y algunos inquilinos tuvieron más
+de un alquiler. Las fechas se calculan en relación con la fecha actual
+(CURRENT_DATE), de modo que siempre hay contratos próximos a vencer y uno
+vencido sin cerrar para que todas las consultas devuelvan resultados.
+
+El script vacía las tablas con TRUNCATE antes de insertar, por lo que borra
+cualquier dato existente.
+
+
+9. VALIDACIONES Y MANEJO DE ERRORES
+-------------------------------------------------------------------------------
+
+Los formularios tienen una primera validación en el navegador (campos
+obligatorios, números mínimos, formato de email). Además, todas las
+operaciones se validan en el servidor, que es la validación que realmente
+protege la base de datos:
+
+  - Campos obligatorios presentes y sin espacios sobrantes.
+  - Documento de 7 a 11 dígitos (DNI o CUIT); los puntos y guiones se
+    eliminan antes de guardar.
+  - Formato de email válido, que se guarda en minúsculas.
+  - Superficie y precios mayores a cero; ambientes entre 1 y 50.
+  - Fechas con formato válido y fin posterior al inicio.
+  - Registros relacionados existentes.
+
+Los errores de la base de datos se traducen a mensajes comprensibles:
+documento o email repetido (violación de UNIQUE), intento de eliminar un
+registro en uso (violación de clave foránea) y registro inexistente. Las
+eliminaciones y los cierres de contrato piden confirmación antes de
+ejecutarse, y los botones se deshabilitan mientras el servidor procesa la
+operación para evitar envíos duplicados.
+
+
+10. INTERFAZ Y DISEÑO RESPONSIVE
+-------------------------------------------------------------------------------
+
+La interfaz es sobria y de estilo administrativo, con colores lisos (sin
+degradados): un encabezado oscuro con el menú de secciones, fondo gris claro,
+tarjetas blancas y el índigo como color de acción. Los estados se distinguen con etiquetas de color: verde para
+disponible o vigente, índigo para alquilada, ámbar para no disponible o
+próximo a vencer y rojo para rescindido o vencido.
+
+El diseño se adapta al ancho de la pantalla:
+
+  - En pantallas chicas la barra de navegación se reemplaza por un panel
+    lateral que ocupa todo el alto de la pantalla y entra desde la derecha;
+    se cierra con el botón, tocando afuera o con la tecla Escape.
+  - Las tablas se transforman en tarjetas apiladas: cada fila muestra sus
+    datos uno debajo del otro, con el nombre de la columna como etiqueta.
+  - Los formularios y filtros pasan de varias columnas a una sola.
+  - En las secciones con formulario lateral, el formulario aparece primero
+    en el celular y a la derecha en pantallas grandes.
+
+
+11. INSTALACIÓN Y EJECUCIÓN
+-------------------------------------------------------------------------------
+
+Requisitos: Docker Desktop, Node.js 22 o superior y pnpm.
+
+  1. Copiar el archivo .env.example como .env.
+  2. Instalar las dependencias con: pnpm install
+  3. Levantar los servicios con: docker compose up
+  4. En otra terminal, crear las tablas y cargar los datos de ejemplo:
+       docker compose exec backend pnpm db:migrate
+       docker compose exec backend pnpm db:seed
+  5. Abrir http://localhost:3000 en el navegador.
+
+Dentro de la red de Docker la aplicación se conecta a la base usando el
+nombre del servicio (postgres) en lugar de localhost; esa dirección se arma en
+los archivos de Docker Compose a partir de las variables del archivo .env.
+
+
+12. LIMITACIONES Y MEJORAS FUTURAS
+-------------------------------------------------------------------------------
+
+  - Los estados de propiedad y contrato se guardan como texto. Una mejora
+    sería restringirlos en la base con una restricción CHECK o con un tipo
+    ENUM, para que la regla no dependa solo de la aplicación.
+
+  - La regla de "un solo contrato vigente por propiedad" se controla en la
+    aplicación. Podría reforzarse en la base con un índice único parcial
+    sobre contrato(id_propiedad) WHERE estado = 'Vigente'.
+
+  - Convendría agregar índices sobre contrato(estado, fecha_fin) y
+    propiedad(estado, id_zona), que son las columnas que más filtran las
+    consultas, si el volumen de datos creciera.
+
+  - La aplicación no tiene usuarios ni inicio de sesión: cualquier persona
+    con acceso puede modificar los datos.
+
+  - Los listados no están paginados. Con el volumen de datos de una
+    inmobiliaria chica no es necesario, pero sí lo sería con miles de
+    registros.
+
+  - No se registran los pagos mensuales de cada contrato. Sería la extensión
+    natural del modelo, con una tabla de pagos relacionada con contrato.
+
+
+13. CONCLUSIÓN
+-------------------------------------------------------------------------------
+
+La aplicación cumple y supera los requisitos de la consigna: utiliza siete
+tablas normalizadas y relacionadas mediante claves foráneas, implementa el ABM
+completo de todas ellas, ofrece cinco consultas que combinan JOIN, filtros por
+rango de fechas, funciones de agregación y agrupamiento, y respeta la
+integridad de los datos mediante restricciones de la base, transacciones y
+validaciones en el servidor. La elección de PostgreSQL con Prisma permitió
+trabajar con un esquema tipado y migraciones versionadas, sin perder la
+posibilidad de escribir SQL nativo cuando la consulta lo requería.

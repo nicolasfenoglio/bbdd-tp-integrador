@@ -1,72 +1,133 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { connection } from "next/server";
 import { Suspense } from "react";
-import { crearPropietario, eliminarPropietario } from "@/app/actions";
-import { Cargando, CamposPersona, MensajeError, SinDatos, Titulo } from "@/app/components/ui";
+import { eliminarPropietario, guardarPropietario } from "@/app/actions";
+import { Contacto, filtroPersona, FormPersona } from "@/app/components/personas";
+import {
+  Avisos,
+  Buscador,
+  Cargando,
+  FilaVacia,
+  FormConfirmar,
+  Tarjeta,
+  Td,
+  Titulo,
+} from "@/app/components/ui";
+import { nombreCompleto, param, paramId } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 
-async function Contenido({ searchParams }: PageProps<"/propietarios">) {
-  const { error } = await searchParams;
-  const propietarios = await prisma.propietario.findMany({
-    orderBy: [{ apellido: "asc" }, { nombre: "asc" }],
-    include: { _count: { select: { propiedades: true } } },
-  });
+export const metadata: Metadata = { title: "Propietarios" };
 
+export default function PropietariosPage(props: PageProps<"/propietarios">) {
   return (
     <>
-      <Titulo subtitulo="Dueños de las propiedades administradas.">Propietarios</Titulo>
-      <MensajeError error={typeof error === "string" ? error : undefined} />
-
-      <form
-        action={crearPropietario}
-        className="card mb-6 grid gap-3 sm:grid-cols-3 lg:grid-cols-6"
-      >
-        <CamposPersona />
-        <div className="flex items-end">
-          <button className="btn w-full">Agregar</button>
-        </div>
-      </form>
-
-      <div className="card overflow-x-auto p-0">
-        <table className="tabla">
-          <thead>
-            <tr>
-              <th>Apellido y nombre</th>
-              <th>Documento</th>
-              <th>Teléfono</th>
-              <th>Email</th>
-              <th>Propiedades</th>
-              <th />
-            </tr>
-          </thead>
-          <tbody>
-            {propietarios.length === 0 && <SinDatos columnas={6} />}
-            {propietarios.map((p) => (
-              <tr key={p.id}>
-                <td>
-                  {p.apellido}, {p.nombre}
-                </td>
-                <td>{p.documento}</td>
-                <td>{p.telefono ?? "-"}</td>
-                <td>{p.email ?? "-"}</td>
-                <td>{p._count.propiedades}</td>
-                <td className="text-right">
-                  <form action={eliminarPropietario}>
-                    <input type="hidden" name="id" value={p.id} />
-                    <button className="btn-danger">Eliminar</button>
-                  </form>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <Titulo
+        titulo="Propietarios"
+        subtitulo="Personas o empresas dueñas de las propiedades registradas."
+      />
+      <Suspense fallback={<Cargando />}>
+        <Contenido {...props} />
+      </Suspense>
     </>
   );
 }
 
-export default function PropietariosPage(props: PageProps<"/propietarios">) {
+async function Contenido({ searchParams }: PageProps<"/propietarios">) {
+  await connection();
+  const sp = await searchParams;
+  const q = param(sp, "q");
+  const editarId = paramId(sp, "editar");
+
+  const [propietarios, editando] = await Promise.all([
+    prisma.propietario.findMany({
+      where: filtroPersona(q),
+      orderBy: [{ apellido: "asc" }, { nombre: "asc" }],
+      include: { propiedades: { select: { estado: true } } },
+    }),
+    editarId ? prisma.propietario.findUnique({ where: { id: editarId } }) : null,
+  ]);
+
   return (
-    <Suspense fallback={<Cargando />}>
-      <Contenido {...props} />
-    </Suspense>
+    <>
+      <Avisos ok={param(sp, "ok")} error={param(sp, "error")} />
+      <div className="grid items-start gap-6 lg:grid-cols-3">
+        <div className="space-y-4 lg:col-span-2">
+          <Buscador
+            placeholder="Buscar por nombre, documento o email"
+            valor={q}
+            limpiar="/propietarios"
+          />
+          <Tarjeta
+            sinPadding
+            className="overflow-hidden"
+            titulo={`${propietarios.length} ${propietarios.length === 1 ? "propietario" : "propietarios"}`}
+          >
+            <table className="tabla">
+              <thead>
+                <tr>
+                  <th>Propietario</th>
+                  <th>Documento</th>
+                  <th>Contacto</th>
+                  <th>Propiedades</th>
+                  <th />
+                </tr>
+              </thead>
+              <tbody>
+                {propietarios.length === 0 && (
+                  <FilaVacia columnas={5} texto={q ? "No hay coincidencias." : undefined} />
+                )}
+                {propietarios.map((p) => {
+                  const alquiladas = p.propiedades.filter((x) => x.estado === "Alquilada").length;
+                  return (
+                    <tr key={p.id} className={p.id === editarId ? "bg-indigo-50/60" : ""}>
+                      <Td l="Propietario" className="font-medium">
+                        {nombreCompleto(p)}
+                      </Td>
+                      <Td l="Documento">{p.documento}</Td>
+                      <Td l="Contacto">
+                        <Contacto persona={p} />
+                      </Td>
+                      <Td l="Propiedades">
+                        <Link href={`/propiedades?propietario=${p.id}`} className="link">
+                          {p.propiedades.length}
+                        </Link>
+                        {p.propiedades.length > 0 && (
+                          <span className="ml-1 text-xs text-slate-500">
+                            ({alquiladas} alquiladas)
+                          </span>
+                        )}
+                      </Td>
+                      <Td>
+                        <div className="flex justify-end gap-1">
+                          <Link
+                            href={`?editar=${p.id}#formulario`}
+                            className="btn-secondary btn-sm"
+                          >
+                            Editar
+                          </Link>
+                          <FormConfirmar
+                            accion={eliminarPropietario}
+                            id={p.id}
+                            mensaje={`¿Eliminar a ${nombreCompleto(p)}?`}
+                          />
+                        </div>
+                      </Td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </Tarjeta>
+        </div>
+
+        <FormPersona
+          accion={guardarPropietario}
+          editando={editando ?? undefined}
+          entidad="propietario"
+          ruta="/propietarios"
+        />
+      </div>
+    </>
   );
 }

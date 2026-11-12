@@ -151,22 +151,31 @@ PostgreSQL utiliza un volumen persistente para conservar los datos entre reinici
 
 ### Preparar la base de datos
 
-Con PostgreSQL en ejecución, generar el cliente de Prisma, aplicar las migraciones y cargar los datos de ejemplo:
+Con los servicios levantados, crear las tablas y cargar los datos de ejemplo. Conviene ejecutarlo dentro del contenedor, así se conecta al PostgreSQL de Docker aunque haya otro instalado en el equipo:
 
 ```bash
-pnpm db:generate   # genera el cliente en app/generated/prisma
-pnpm db:migrate    # crea las tablas (prisma/migrations)
-pnpm db:seed       # borra y carga datos de ejemplo (prisma/seed.sql)
+docker compose exec backend pnpm db:migrate   # crea las tablas (prisma/migrations)
+docker compose exec backend pnpm db:seed      # BORRA todo y carga datos de ejemplo (prisma/seed.sql)
 ```
+
+Fuera de Docker se usan los mismos scripts (`pnpm db:generate`, `pnpm db:migrate`, `pnpm db:seed`) con el `DATABASE_URL` de `.env`.
+
+> En Windows, si el servidor de desarrollo del contenedor no detecta archivos nuevos, reiniciarlo con `docker compose restart backend`.
 
 ### Funcionalidades
 
-- **Propiedades, Propietarios, Inquilinos y Contratos:** alta, baja y listado de cada entidad. Al crear un contrato la propiedad pasa a `Alquilada`; al finalizarlo o rescindirlo vuelve a `Disponible` (ambas operaciones en una transacción).
+- **ABM completo de las 7 tablas:** propiedades, contratos, propietarios, inquilinos y, en _Catálogos_, zonas, localidades y tipos.
+- **Fichas de detalle** de propiedades (con historial de contratos) y de contratos (renovar, finalizar, rescindir, editar).
+- **Reglas de negocio:** al crear un contrato la propiedad pasa a `Alquilada`; al finalizarlo o rescindirlo vuelve a `Disponible` (en una transacción).
 - **Consultas** (`/consultas`, cada una muestra su SQL equivalente):
   1. Propiedades disponibles por zona.
   2. Contratos vigentes que vencen en los próximos N días.
-  3. Resumen de propiedades por zona (total, disponibles, alquiladas, alquiler promedio).
+  3. Resumen de propiedades por zona (total, disponibles, alquiladas, ocupación, alquiler promedio).
   4. Ingreso mensual por propietario según contratos vigentes.
+  5. Contratos vencidos sin cerrar.
+- **Diseño responsive:** en celulares las tablas se muestran como tarjetas y la navegación pasa a un menú desplegable.
+
+El informe completo de la aplicación está en [`docs/INFORME.txt`](docs/INFORME.txt).
 
 ### Acceder a la aplicación
 

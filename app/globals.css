@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f6f7f9;
-  --foreground: #1f2328;
+  --background: #f4f6fa;
+  --foreground: #0f172a;
 }
 
 @theme inline {
@@ -18,35 +18,85 @@ body {
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
 }
 
+::selection {
+  background: #c7d2fe;
+}
+
 @layer components {
   .card {
-    @apply rounded-lg border border-zinc-200 bg-white p-5 shadow-sm;
+    @apply rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6;
   }
   .input {
-    @apply w-full rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100;
+    @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-xs transition outline-none placeholder:text-slate-400 hover:border-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 disabled:bg-slate-100 disabled:text-slate-500;
   }
   .label {
-    @apply mb-1 block text-xs font-medium text-zinc-600;
+    @apply mb-1.5 block text-xs font-medium text-slate-600;
   }
   .btn {
-    @apply inline-flex items-center justify-center rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700;
+    @apply inline-flex items-center justify-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium whitespace-nowrap text-white shadow-sm transition hover:bg-indigo-700 focus-visible:ring-4 focus-visible:ring-indigo-200 focus-visible:outline-none active:translate-y-px disabled:cursor-wait disabled:opacity-60;
   }
   .btn-secondary {
-    @apply inline-flex items-center justify-center rounded-md border border-zinc-300 bg-white px-2.5 py-1 text-xs font-medium text-zinc-700 hover:bg-zinc-50;
+    @apply inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium whitespace-nowrap text-slate-700 shadow-xs transition hover:border-slate-400 hover:bg-slate-50 focus-visible:ring-4 focus-visible:ring-slate-200 focus-visible:outline-none active:translate-y-px disabled:cursor-wait disabled:opacity-60;
+  }
+  .btn-sm {
+    @apply rounded-md px-2.5 py-1 text-xs;
   }
   .btn-danger {
-    @apply inline-flex items-center justify-center rounded-md px-2.5 py-1 text-xs font-medium text-red-600 hover:bg-red-50;
+    @apply inline-flex items-center justify-center rounded-md px-2.5 py-1 text-xs font-medium whitespace-nowrap text-red-600 transition hover:bg-red-50 disabled:cursor-wait disabled:opacity-60;
   }
+  .link {
+    @apply font-medium text-indigo-700 underline-offset-2 hover:underline;
+  }
+
+  /* Tablas: en pantallas chicas cada fila se muestra como una tarjeta (usa data-label). */
   .tabla {
     @apply w-full text-left text-sm;
   }
   .tabla th {
-    @apply border-b border-zinc-200 px-3 py-2 text-xs font-semibold tracking-wide text-zinc-500 uppercase;
+    @apply border-b border-slate-200 bg-slate-50/80 px-4 py-3 text-[11px] font-semibold tracking-wider whitespace-nowrap text-slate-500 uppercase;
   }
   .tabla td {
-    @apply border-b border-zinc-100 px-3 py-2 align-middle;
+    @apply border-b border-slate-100 px-4 py-3 align-middle text-slate-700;
+  }
+  .tabla tbody tr:last-child td {
+    @apply border-b-0;
+  }
+  .tabla tbody tr {
+    @apply transition-colors;
   }
   .tabla tbody tr:hover {
-    @apply bg-zinc-50;
+    @apply bg-indigo-50/40;
+  }
+
+  @media (max-width: 767px) {
+    .tabla thead {
+      display: none;
+    }
+    .tabla,
+    .tabla tbody,
+    .tabla tr,
+    .tabla td {
+      display: block;
+      width: 100%;
+    }
+    .tabla tbody tr {
+      @apply border-b border-slate-200 px-4 py-3;
+    }
+    .tabla tbody tr:last-child {
+      @apply border-b-0;
+    }
+    .tabla td {
+      @apply flex items-start justify-between gap-4 border-0 px-0 py-1 text-right;
+    }
+    .tabla td::before {
+      content: attr(data-label);
+      @apply shrink-0 text-left text-xs font-medium text-slate-500;
+    }
+    .tabla td:not([data-label])::before {
+      content: none;
+    }
+    .tabla td:not([data-label]) {
+      @apply justify-end pt-2;
+    }
   }
 }
