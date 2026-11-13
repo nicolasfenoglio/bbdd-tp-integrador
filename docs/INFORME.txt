@@ -51,21 +51,34 @@ Husky para mantener la calidad del código.
 
 La aplicación sigue una arquitectura cliente-servidor de tres capas:
 
-  - Capa de presentación: páginas y componentes de la carpeta app/. Cada
-    página consulta los datos que necesita directamente desde el servidor y
-    devuelve HTML ya armado al navegador.
+  - Capa de presentación: la carpeta app/ contiene las rutas (una carpeta
+    por sección, con su archivo page.tsx) y, en subcarpetas privadas
+    _components/, los componentes que usa solo esa sección. Los componentes
+    reutilizables están en components/: los genéricos de la interfaz
+    (tablas, tarjetas, campos de formulario, botones y etiquetas de estado)
+    en components/ui/, y los que comparten varias secciones en
+    components/personas.tsx y components/contratos.tsx. Las páginas se
+    renderizan en el servidor y devuelven HTML ya armado al navegador.
 
-  - Capa de lógica: el archivo app/actions.ts concentra todas las operaciones
-    de escritura (crear, modificar, eliminar, finalizar, rescindir y renovar).
-    Allí se validan los datos recibidos de los formularios y se aplican las
-    reglas de negocio antes de tocar la base de datos.
+  - Capa de lógica: las operaciones de escritura (crear, modificar,
+    eliminar, finalizar, rescindir y renovar) son Server Actions agrupadas
+    por entidad en lib/actions/ (catalogos.ts, personas.ts, propiedades.ts y
+    contratos.ts). Allí se validan los datos recibidos de los formularios,
+    con las funciones de lib/validacion.ts, y se aplican las reglas de
+    negocio antes de tocar la base de datos.
 
-  - Capa de datos: PostgreSQL, accedido a través del cliente de Prisma
-    definido en lib/prisma.ts. Para las consultas de agregación más complejas
-    se utiliza SQL nativo mediante prisma.$queryRaw.
+  - Capa de acceso a datos: las lecturas están en lib/data/, también
+    agrupadas por entidad. Las páginas no escriben consultas: llaman a esas
+    funciones. Las cinco consultas del trabajo práctico están en
+    lib/data/consultas.ts, cada una junto a su sentencia SQL equivalente.
+    Todas usan el cliente de Prisma definido en lib/prisma.ts para acceder a
+    PostgreSQL; para las consultas de agregación más complejas se utiliza
+    SQL nativo mediante prisma.$queryRaw.
 
 Cuando una operación termina, el servidor redirige al usuario a la página que
-corresponde y le muestra un mensaje de éxito o de error.
+corresponde y le muestra un mensaje de éxito o de error. Ese comportamiento,
+junto con la traducción de los errores de la base de datos a mensajes
+comprensibles, está centralizado en lib/actions/ejecutar.ts.
 
 
 4. MODELO DE DATOS

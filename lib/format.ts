@@ -59,6 +59,11 @@ export function nombreCompleto(p: { nombre: string; apellido: string }) {
   return `${p.apellido}, ${p.nombre}`;
 }
 
+/** Cantidad con el sustantivo en singular o plural: "1 contrato", "3 contratos". */
+export function plural(cantidad: number, singular: string, pluralTexto: string) {
+  return `${cantidad} ${cantidad === 1 ? singular : pluralTexto}`;
+}
+
 type Params = Record<string, string | string[] | undefined>;
 
 /** Lee un parámetro de búsqueda como string (o undefined). */

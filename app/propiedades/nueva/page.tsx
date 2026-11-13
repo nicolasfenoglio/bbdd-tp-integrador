@@ -1,9 +1,13 @@
 import type { Metadata } from "next";
 import { connection } from "next/server";
 import { Suspense } from "react";
-import { Avisos, Cargando, Tarjeta, Titulo } from "@/app/components/ui";
+import { Avisos } from "@/components/ui/avisos";
+import { Cargando } from "@/components/ui/cargando";
+import { Tarjeta } from "@/components/ui/tarjeta";
+import { Titulo } from "@/components/ui/titulo";
+import { opcionesPropiedad } from "@/lib/data/propiedades";
 import { param, paramId } from "@/lib/format";
-import { FormPropiedad, opcionesPropiedad } from "../form-propiedad";
+import { FormPropiedad } from "../_components/form-propiedad";
 
 export const metadata: Metadata = { title: "Nueva propiedad" };
 
