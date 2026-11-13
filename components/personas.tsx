@@ -1,6 +1,7 @@
-import Link from "next/link";
-import { BotonEnviar } from "@/app/components/botones";
-import { Campo, Tarjeta } from "@/app/components/ui";
+import { AccionesFormulario, Campo } from "@/components/ui/formulario";
+import { TarjetaFormulario } from "@/components/ui/tarjeta";
+
+/* Componentes compartidos por Propietarios e Inquilinos (tienen la misma estructura). */
 
 type Persona = {
   id: number;
@@ -10,20 +11,6 @@ type Persona = {
   telefono: string | null;
   email: string | null;
 };
-
-/** Filtro de búsqueda por nombre, apellido, documento o email (sirve para ambas tablas). */
-export function filtroPersona(q?: string) {
-  if (!q) return undefined;
-  const contiene = { contains: q, mode: "insensitive" as const };
-  return {
-    OR: [
-      { nombre: contiene },
-      { apellido: contiene },
-      { documento: contiene },
-      { email: contiene },
-    ],
-  };
-}
 
 /** Formulario de alta/edición compartido entre Propietarios e Inquilinos. */
 export function FormPersona({
@@ -38,11 +25,7 @@ export function FormPersona({
   ruta: string;
 }) {
   return (
-    <Tarjeta
-      id="formulario"
-      titulo={editando ? `Editar ${entidad} #${editando.id}` : `Nuevo ${entidad}`}
-      className="order-first lg:sticky lg:top-20 lg:order-none"
-    >
+    <TarjetaFormulario titulo={editando ? `Editar ${entidad} #${editando.id}` : `Nuevo ${entidad}`}>
       <form
         action={accion}
         key={editando?.id ?? "nuevo"}
@@ -77,24 +60,32 @@ export function FormPersona({
         <Campo label="Email" className="sm:col-span-2 lg:col-span-1">
           <input name="email" type="email" defaultValue={editando?.email ?? ""} className="input" />
         </Campo>
-        <div className="flex gap-2 sm:col-span-2 lg:col-span-1">
-          <BotonEnviar>{editando ? "Guardar cambios" : `Crear ${entidad}`}</BotonEnviar>
-          {editando && (
-            <Link href={ruta} className="btn-secondary">
-              Cancelar
-            </Link>
-          )}
-        </div>
+        <AccionesFormulario
+          className="flex gap-2 sm:col-span-2 lg:col-span-1"
+          enviar={editando ? "Guardar cambios" : `Crear ${entidad}`}
+          cancelar={editando ? ruta : undefined}
+        />
       </form>
-    </Tarjeta>
+    </TarjetaFormulario>
   );
 }
 
-export function Contacto({ persona }: { persona: Persona }) {
+/** Teléfono y email en una celda de tabla. */
+export function Contacto({ persona }: { persona: Pick<Persona, "telefono" | "email"> }) {
   return (
     <div className="text-right md:text-left">
       <div>{persona.telefono ?? "-"}</div>
       {persona.email && <div className="text-xs text-slate-500">{persona.email}</div>}
     </div>
+  );
+}
+
+/** Teléfono y email dentro de una ficha de detalle (<Dato>). */
+export function ContactoFicha({ persona }: { persona: Pick<Persona, "telefono" | "email"> }) {
+  return (
+    <>
+      {persona.telefono ?? "-"}
+      {persona.email && <span className="block text-xs text-slate-500">{persona.email}</span>}
+    </>
   );
 }

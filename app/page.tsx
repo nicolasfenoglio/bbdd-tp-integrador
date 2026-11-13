@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Estado } from "@/app/components/ui";
+import { Estado } from "@/components/ui/estado";
 
 // Portada: no consulta la base. Los datos se ven entrando a cada sección desde el menú.
 

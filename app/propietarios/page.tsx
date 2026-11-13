@@ -2,20 +2,16 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { connection } from "next/server";
 import { Suspense } from "react";
-import { eliminarPropietario, guardarPropietario } from "@/app/actions";
-import { Contacto, filtroPersona, FormPersona } from "@/app/components/personas";
-import {
-  Avisos,
-  Buscador,
-  Cargando,
-  FilaVacia,
-  FormConfirmar,
-  Tarjeta,
-  Td,
-  Titulo,
-} from "@/app/components/ui";
-import { nombreCompleto, param, paramId } from "@/lib/format";
-import { prisma } from "@/lib/prisma";
+import { Contacto, FormPersona } from "@/components/personas";
+import { Avisos } from "@/components/ui/avisos";
+import { Cargando } from "@/components/ui/cargando";
+import { Buscador } from "@/components/ui/formulario";
+import { AccionesFila, Tabla, Td } from "@/components/ui/tabla";
+import { Tarjeta } from "@/components/ui/tarjeta";
+import { Titulo } from "@/components/ui/titulo";
+import { eliminarPropietario, guardarPropietario } from "@/lib/actions/personas";
+import { buscarPropietarios, obtenerPropietario } from "@/lib/data/personas";
+import { nombreCompleto, param, paramId, plural } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Propietarios" };
 
@@ -40,12 +36,8 @@ async function Contenido({ searchParams }: PageProps<"/propietarios">) {
   const editarId = paramId(sp, "editar");
 
   const [propietarios, editando] = await Promise.all([
-    prisma.propietario.findMany({
-      where: filtroPersona(q),
-      orderBy: [{ apellido: "asc" }, { nombre: "asc" }],
-      include: { propiedades: { select: { estado: true } } },
-    }),
-    editarId ? prisma.propietario.findUnique({ where: { id: editarId } }) : null,
+    buscarPropietarios(q),
+    editarId ? obtenerPropietario(editarId) : null,
   ]);
 
   return (
@@ -61,63 +53,43 @@ async function Contenido({ searchParams }: PageProps<"/propietarios">) {
           <Tarjeta
             sinPadding
             className="overflow-hidden"
-            titulo={`${propietarios.length} ${propietarios.length === 1 ? "propietario" : "propietarios"}`}
+            titulo={plural(propietarios.length, "propietario", "propietarios")}
           >
-            <table className="tabla">
-              <thead>
-                <tr>
-                  <th>Propietario</th>
-                  <th>Documento</th>
-                  <th>Contacto</th>
-                  <th>Propiedades</th>
-                  <th />
-                </tr>
-              </thead>
-              <tbody>
-                {propietarios.length === 0 && (
-                  <FilaVacia columnas={5} texto={q ? "No hay coincidencias." : undefined} />
-                )}
-                {propietarios.map((p) => {
-                  const alquiladas = p.propiedades.filter((x) => x.estado === "Alquilada").length;
-                  return (
-                    <tr key={p.id} className={p.id === editarId ? "bg-indigo-50/60" : ""}>
-                      <Td l="Propietario" className="font-medium">
-                        {nombreCompleto(p)}
-                      </Td>
-                      <Td l="Documento">{p.documento}</Td>
-                      <Td l="Contacto">
-                        <Contacto persona={p} />
-                      </Td>
-                      <Td l="Propiedades">
-                        <Link href={`/propiedades?propietario=${p.id}`} className="link">
-                          {p.propiedades.length}
-                        </Link>
-                        {p.propiedades.length > 0 && (
-                          <span className="ml-1 text-xs text-slate-500">
-                            ({alquiladas} alquiladas)
-                          </span>
-                        )}
-                      </Td>
-                      <Td>
-                        <div className="flex justify-end gap-1">
-                          <Link
-                            href={`?editar=${p.id}#formulario`}
-                            className="btn-secondary btn-sm"
-                          >
-                            Editar
-                          </Link>
-                          <FormConfirmar
-                            accion={eliminarPropietario}
-                            id={p.id}
-                            mensaje={`¿Eliminar a ${nombreCompleto(p)}?`}
-                          />
-                        </div>
-                      </Td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+            <Tabla
+              columnas={["Propietario", "Documento", "Contacto", "Propiedades", ""]}
+              vacia={propietarios.length === 0}
+              textoVacio={q ? "No hay coincidencias." : undefined}
+            >
+              {propietarios.map((p) => {
+                const alquiladas = p.propiedades.filter((x) => x.estado === "Alquilada").length;
+                return (
+                  <tr key={p.id} className={p.id === editarId ? "bg-indigo-50/60" : ""}>
+                    <Td l="Propietario" className="font-medium">
+                      {nombreCompleto(p)}
+                    </Td>
+                    <Td l="Documento">{p.documento}</Td>
+                    <Td l="Contacto">
+                      <Contacto persona={p} />
+                    </Td>
+                    <Td l="Propiedades">
+                      <Link href={`/propiedades?propietario=${p.id}`} className="link">
+                        {p.propiedades.length}
+                      </Link>
+                      {p.propiedades.length > 0 && (
+                        <span className="ml-1 text-xs text-slate-500">
+                          ({alquiladas} alquiladas)
+                        </span>
+                      )}
+                    </Td>
+                    <AccionesFila
+                      id={p.id}
+                      eliminar={eliminarPropietario}
+                      mensaje={`¿Eliminar a ${nombreCompleto(p)}?`}
+                    />
+                  </tr>
+                );
+              })}
+            </Tabla>
           </Tarjeta>
         </div>
 

@@ -2,19 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { connection } from "next/server";
 import { Suspense } from "react";
-import { eliminarZona, guardarZona } from "@/app/actions";
-import { BotonEnviar } from "@/app/components/botones";
-import {
-  Avisos,
-  Campo,
-  Cargando,
-  FilaVacia,
-  FormConfirmar,
-  Tarjeta,
-  Td,
-} from "@/app/components/ui";
+import { Avisos } from "@/components/ui/avisos";
+import { Cargando } from "@/components/ui/cargando";
+import { AccionesFormulario, Campo } from "@/components/ui/formulario";
+import { AccionesFila, Tabla, Td } from "@/components/ui/tabla";
+import { Tarjeta, TarjetaFormulario } from "@/components/ui/tarjeta";
+import { eliminarZona, guardarZona } from "@/lib/actions/catalogos";
+import { listarLocalidades, listarZonasConUso } from "@/lib/data/catalogos";
 import { param, paramId } from "@/lib/format";
-import { prisma } from "@/lib/prisma";
 
 export const metadata: Metadata = { title: "Zonas" };
 
@@ -31,13 +26,7 @@ async function Contenido({ searchParams }: PageProps<"/catalogos/zonas">) {
   const sp = await searchParams;
   const editarId = paramId(sp, "editar");
 
-  const [zonas, localidades] = await Promise.all([
-    prisma.zona.findMany({
-      include: { localidad: true, _count: { select: { propiedades: true } } },
-      orderBy: [{ localidad: { descripcion: "asc" } }, { nombre: "asc" }],
-    }),
-    prisma.localidad.findMany({ orderBy: { descripcion: "asc" } }),
-  ]);
+  const [zonas, localidades] = await Promise.all([listarZonasConUso(), listarLocalidades()]);
   const editando = zonas.find((z) => z.id === editarId);
 
   return (
@@ -50,55 +39,35 @@ async function Contenido({ searchParams }: PageProps<"/catalogos/zonas">) {
           titulo={`${zonas.length} zonas`}
           descripcion="Cada zona pertenece a una localidad."
         >
-          <table className="tabla">
-            <thead>
-              <tr>
-                <th>Zona</th>
-                <th>Localidad</th>
-                <th>Descripción</th>
-                <th>Propiedades</th>
-                <th />
+          <Tabla
+            columnas={["Zona", "Localidad", "Descripción", "Propiedades", ""]}
+            vacia={zonas.length === 0}
+          >
+            {zonas.map((z) => (
+              <tr key={z.id} className={z.id === editarId ? "bg-indigo-50/60" : ""}>
+                <Td l="Zona" className="font-medium">
+                  {z.nombre}
+                </Td>
+                <Td l="Localidad">{z.localidad.descripcion}</Td>
+                <Td l="Descripción" className="text-slate-500">
+                  {z.descripcion || "-"}
+                </Td>
+                <Td l="Propiedades">
+                  <Link href={`/propiedades?zona=${z.id}`} className="link">
+                    {z._count.propiedades}
+                  </Link>
+                </Td>
+                <AccionesFila
+                  id={z.id}
+                  eliminar={eliminarZona}
+                  mensaje={`¿Eliminar la zona "${z.nombre}"?`}
+                />
               </tr>
-            </thead>
-            <tbody>
-              {zonas.length === 0 && <FilaVacia columnas={5} />}
-              {zonas.map((z) => (
-                <tr key={z.id} className={z.id === editarId ? "bg-indigo-50/60" : ""}>
-                  <Td l="Zona" className="font-medium">
-                    {z.nombre}
-                  </Td>
-                  <Td l="Localidad">{z.localidad.descripcion}</Td>
-                  <Td l="Descripción" className="text-slate-500">
-                    {z.descripcion || "-"}
-                  </Td>
-                  <Td l="Propiedades">
-                    <Link href={`/propiedades?zona=${z.id}`} className="link">
-                      {z._count.propiedades}
-                    </Link>
-                  </Td>
-                  <Td>
-                    <div className="flex justify-end gap-1">
-                      <Link href={`?editar=${z.id}#formulario`} className="btn-secondary btn-sm">
-                        Editar
-                      </Link>
-                      <FormConfirmar
-                        accion={eliminarZona}
-                        id={z.id}
-                        mensaje={`¿Eliminar la zona "${z.nombre}"?`}
-                      />
-                    </div>
-                  </Td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+            ))}
+          </Tabla>
         </Tarjeta>
 
-        <Tarjeta
-          id="formulario"
-          titulo={editando ? `Editar zona #${editando.id}` : "Nueva zona"}
-          className="order-first lg:sticky lg:top-20 lg:order-none"
-        >
+        <TarjetaFormulario titulo={editando ? `Editar zona #${editando.id}` : "Nueva zona"}>
           {localidades.length === 0 ? (
             <p className="text-sm text-slate-500">
               Primero cargá una{" "}
@@ -135,17 +104,13 @@ async function Contenido({ searchParams }: PageProps<"/catalogos/zonas">) {
                   className="input"
                 />
               </Campo>
-              <div className="flex gap-2">
-                <BotonEnviar>{editando ? "Guardar cambios" : "Crear zona"}</BotonEnviar>
-                {editando && (
-                  <Link href="/catalogos/zonas" className="btn-secondary">
-                    Cancelar
-                  </Link>
-                )}
-              </div>
+              <AccionesFormulario
+                enviar={editando ? "Guardar cambios" : "Crear zona"}
+                cancelar={editando ? "/catalogos/zonas" : undefined}
+              />
             </form>
           )}
-        </Tarjeta>
+        </TarjetaFormulario>
       </div>
     </>
   );

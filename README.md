@@ -246,6 +246,31 @@ Reconstruir los servicios:
 docker compose up --build
 ```
 
+## Estructura del proyecto
+
+```text
+app/                         Rutas (App Router): una carpeta por sección con su page.tsx
+  <sección>/_components/     Componentes que usa solo esa sección
+components/
+  ui/                        Componentes genéricos reutilizables (tabla, tarjeta, formulario, botones…)
+  personas.tsx               Formulario y contacto compartidos por propietarios e inquilinos
+  contratos.tsx              Enlace a la ficha de un contrato
+  nav.tsx                    Barra de navegación y pestañas
+lib/
+  data/                      Lecturas de la base por entidad (consultas.ts: las 5 consultas y su SQL)
+  actions/                   Server Actions (escrituras) por entidad
+  validacion.ts              Lectura y validación de los formularios
+  format.ts                  Formato de montos y fechas, parámetros de búsqueda
+  prisma.ts                  Cliente de Prisma
+prisma/                      Esquema, migraciones y datos de ejemplo
+docs/                        SRS e informe
+```
+
+Convenciones:
+
+- Las páginas no consultan la base directamente: leen con las funciones de `lib/data/` y escriben con las acciones de `lib/actions/`.
+- Un componente que usa una sola sección va en la carpeta `_components/` de esa sección; si lo usan dos o más, va en `components/`.
+
 ## Colaboración
 
 Se establecen las siguientes convenciones y herramientas para mantener un flujo de trabajo consistente entre los integrantes del equipo.

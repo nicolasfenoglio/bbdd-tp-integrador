@@ -1,8 +1,7 @@
 import Link from "next/link";
-import { guardarPropiedad } from "@/app/actions";
-import { BotonEnviar } from "@/app/components/botones";
-import { Campo } from "@/app/components/ui";
-import { prisma } from "@/lib/prisma";
+import { AccionesFormulario, Campo } from "@/components/ui/formulario";
+import { guardarPropiedad } from "@/lib/actions/propiedades";
+import type { OpcionesPropiedad } from "@/lib/data/propiedades";
 
 type PropiedadEditable = {
   id: number;
@@ -16,18 +15,7 @@ type PropiedadEditable = {
   idZona: number;
 };
 
-export async function opcionesPropiedad() {
-  const [propietarios, tipos, localidades] = await Promise.all([
-    prisma.propietario.findMany({ orderBy: [{ apellido: "asc" }, { nombre: "asc" }] }),
-    prisma.tipo.findMany({ orderBy: { descripcion: "asc" } }),
-    prisma.localidad.findMany({
-      orderBy: { descripcion: "asc" },
-      include: { zonas: { orderBy: { nombre: "asc" } } },
-    }),
-  ]);
-  return { propietarios, tipos, localidades };
-}
-
+/** Alta (sin `propiedad`) o edición de una propiedad. Las opciones salen de opcionesPropiedad(). */
 export function FormPropiedad({
   propiedad,
   opciones,
@@ -36,7 +24,7 @@ export function FormPropiedad({
   columnas = "sm:grid-cols-2",
 }: {
   propiedad?: PropiedadEditable;
-  opciones: Awaited<ReturnType<typeof opcionesPropiedad>>;
+  opciones: OpcionesPropiedad;
   propietarioInicial?: number;
   cancelar?: string;
   columnas?: string;
@@ -166,14 +154,11 @@ export function FormPropiedad({
           </select>
         )}
       </Campo>
-      <div className="flex gap-2 sm:col-span-full">
-        <BotonEnviar>{propiedad ? "Guardar cambios" : "Crear propiedad"}</BotonEnviar>
-        {cancelar && (
-          <Link href={cancelar} className="btn-secondary">
-            Cancelar
-          </Link>
-        )}
-      </div>
+      <AccionesFormulario
+        className="flex gap-2 sm:col-span-full"
+        enviar={propiedad ? "Guardar cambios" : "Crear propiedad"}
+        cancelar={cancelar}
+      />
     </form>
   );
 }

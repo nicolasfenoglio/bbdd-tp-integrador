@@ -1,6 +1,6 @@
 import { Suspense } from "react";
-import { Pestanas } from "@/app/components/nav";
-import { Titulo } from "@/app/components/ui";
+import { Pestanas } from "@/components/nav";
+import { Titulo } from "@/components/ui/titulo";
 
 const PESTANAS = [
   { href: "/catalogos/zonas", label: "Zonas" },
