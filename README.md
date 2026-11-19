@@ -149,6 +149,22 @@ El backend se ejecuta utilizando el servidor de desarrollo de Next.js, que propo
 
 PostgreSQL utiliza un volumen persistente para conservar los datos entre reinicios y recreaciones de los contenedores.
 
+### Distribuir imágenes de ejemplo
+
+El script `images:distribute` carga las imágenes de la carpeta `img/` mediante la API privada del proyecto y las distribuye balanceadamente entre todas las propiedades.
+
+```bash
+# Con la aplicación ejecutándose en http://localhost:3000
+pnpm images:distribute
+
+# Otra URL
+pnpm images:distribute http://localhost:3000
+```
+
+Antes de ejecutar el script, configurá `DISTRIBUTOR_SECRET` en `.env` y reiniciá Next.js. La API usa el mismo valor para autenticar las solicitudes.
+
+Cada imagen se identifica por su hash SHA-256. El estado temporal se guarda fuera del repositorio en el directorio temporal del sistema. Una segunda ejecución no vuelve a cargar imágenes ya distribuidas y las nuevas se asignan primero a las propiedades con menos recursos.
+
 ### Preparar la base de datos
 
 Con los servicios levantados, crear las tablas y cargar los datos de ejemplo. Conviene ejecutarlo dentro del contenedor, así se conecta al PostgreSQL de Docker aunque haya otro instalado en el equipo:

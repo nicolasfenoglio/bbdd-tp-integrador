@@ -8,6 +8,7 @@
     "db:generate": "prisma generate --config prisma7.config.ts",
     "db:migrate": "prisma migrate deploy --config prisma7.config.ts",
     "db:seed": "prisma db execute --file prisma/seed.sql --config prisma7.config.ts",
+    "images:distribute": "node scripts/distribuir-imagenes.mjs",
     "start": "next start --hostname 0.0.0.0",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
@@ -26,6 +27,8 @@
     ]
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1171.0",
+    "@aws-sdk/s3-request-presigner": "^3.1171.0",
     "@prisma/adapter-pg": "^7.10.1",
     "@prisma/client": "^7.10.1",
     "dotenv": "^18.0.10",

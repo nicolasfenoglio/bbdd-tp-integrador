@@ -36,6 +36,7 @@ export function obtenerPropiedad(id: number) {
       tipo: true,
       zona: { include: { localidad: true } },
       contratos: { include: { inquilino: true }, orderBy: { fechaInicio: "desc" } },
+      recursos: { orderBy: [{ principal: "desc" }, { orden: "asc" }, { id: "asc" }] },
     },
   });
 }
@@ -46,6 +47,19 @@ export function listarPropiedadesDisponibles() {
     where: { estado: "Disponible" },
     include: { zona: { include: { localidad: true } }, tipo: true },
     orderBy: [{ zona: { nombre: "asc" } }, { direccion: "asc" }],
+  });
+}
+
+/** Propiedades ofrecidas en la portada pública de la inmobiliaria. */
+export function listarPropiedadesLanding() {
+  return prisma.propiedad.findMany({
+    where: { estado: "Disponible" },
+    include: {
+      tipo: true,
+      zona: { include: { localidad: true } },
+      recursos: { orderBy: [{ principal: "desc" }, { orden: "asc" }, { id: "asc" }] },
+    },
+    orderBy: [{ direccion: "asc" }],
   });
 }
 
