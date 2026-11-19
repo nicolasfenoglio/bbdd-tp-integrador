@@ -14,6 +14,8 @@ import { param } from "@/lib/format";
 import { DatosPropiedad } from "../_components/datos-propiedad";
 import { FormPropiedad } from "../_components/form-propiedad";
 import { HistorialContratos } from "../_components/historial-contratos";
+import { GestionImagenes } from "../_components/gestion-imagenes";
+import { CarruselImagenes } from "../_components/carrusel-imagenes";
 
 export const metadata: Metadata = { title: "Propiedad" };
 
@@ -62,7 +64,9 @@ async function Contenido({ params, searchParams }: PageProps<"/propiedades/[id]"
 
       <div className="grid items-start gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
+          <CarruselImagenes imagenes={p.recursos} />
           <DatosPropiedad propiedad={p} />
+          <GestionImagenes propiedad={p} />
           <HistorialContratos contratos={p.contratos} />
         </div>
 

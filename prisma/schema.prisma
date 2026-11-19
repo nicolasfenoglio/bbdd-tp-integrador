@@ -72,8 +72,24 @@ model Propiedad {
   zona        Zona        @relation(fields: [idZona], references: [id])
 
   contratos Contrato[]
+  recursos  Recurso[]
 
   @@map("propiedad")
+}
+
+model Recurso {
+  id            Int     @id @default(autoincrement())
+  nombre        String
+  clave         String  @unique
+  tipoContenido String  @map("tipo_contenido")
+  tamano        Int
+  orden         Int     @default(0)
+  principal     Boolean @default(false)
+  idPropiedad   Int     @map("id_propiedad")
+
+  propiedad Propiedad @relation(fields: [idPropiedad], references: [id], onDelete: Cascade)
+
+  @@map("recurso")
 }
 
 model Tipo {
